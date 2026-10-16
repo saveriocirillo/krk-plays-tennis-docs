@@ -1,0 +1,13 @@
+extends: existence
+message: "Don't use '%s'. Fictional people have no stated gender: refer to them by name."
+level: error
+ignorecase: true
+tokens:
+  - he
+  - she
+  - him
+  - his
+  - her
+  - hers
+  - himself
+  - herself

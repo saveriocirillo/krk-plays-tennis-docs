@@ -15,7 +15,9 @@
     "astro": "astro",
     "lint:spec": "spectral lint openapi/krkplaystennis.v1.yaml --fail-severity=warn",
     "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010",
-    "check:errors": "node scripts/check-error-types.mjs"
+    "check:errors": "node scripts/check-error-types.mjs",
+    "test:samples": "node scripts/test-samples.mjs",
+    "lint:prose": "vale src/content/docs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",

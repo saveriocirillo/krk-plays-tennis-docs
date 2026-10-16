@@ -38,7 +38,7 @@ The token endpoint, `POST /oauth/token`, is the one exception: it follows OAuth 
 
 ### `invalid-request`
 
-**Status:** `400` · **Title:** Invalid request
+**Status:** `400` · **Title:** `Invalid request`
 
 The request is malformed: a query parameter has the wrong type or is out of range, or the body isn't valid JSON. The `errors` array lists each invalid parameter.
 
@@ -46,7 +46,7 @@ The request is malformed: a query parameter has the wrong type or is out of rang
 
 ### `unauthenticated`
 
-**Status:** `401` · **Title:** Authentication required
+**Status:** `401` · **Title:** `Authentication required`
 
 The request has no credentials, or they aren't valid:
 
@@ -57,7 +57,7 @@ The request has no credentials, or they aren't valid:
 
 ### `insufficient-scope`
 
-**Status:** `403` · **Title:** Insufficient scope
+**Status:** `403` · **Title:** `Insufficient scope`
 
 The access token is valid but doesn't have the `matches:write` scope.
 
@@ -65,7 +65,7 @@ The access token is valid but doesn't have the `matches:write` scope.
 
 ### `not-competition-organizer`
 
-**Status:** `403` · **Title:** Not the competition organizer
+**Status:** `403` · **Title:** `Not the competition organizer`
 
 You tried to submit a result for a competition that another organizer runs. A token can only submit results for its own organizer's competitions.
 
@@ -73,7 +73,7 @@ You tried to submit a result for a competition that another organizer runs. A to
 
 ### `not-found`
 
-**Status:** `404` · **Title:** Not found
+**Status:** `404` · **Title:** `Not found`
 
 No resource exists with the ID in the path.
 
@@ -81,7 +81,7 @@ No resource exists with the ID in the path.
 
 ### `duplicate-match`
 
-**Status:** `409` · **Title:** Duplicate match
+**Status:** `409` · **Title:** `Duplicate match`
 
 The API already has a match with the same two players, in the same competition, at the same `played_at` time. `detail` includes the ID of the existing match.
 
@@ -89,7 +89,7 @@ The API already has a match with the same two players, in the same competition, 
 
 ### `idempotency-conflict`
 
-**Status:** `409` · **Title:** Idempotency key conflict
+**Status:** `409` · **Title:** `Idempotency key conflict`
 
 You sent an `Idempotency-Key` that was already used in the last 24 hours, with a different request body.
 
@@ -97,7 +97,7 @@ You sent an `Idempotency-Key` that was already used in the last 24 hours, with a
 
 ### `invalid-score`
 
-**Status:** `422` · **Title:** Invalid score
+**Status:** `422` · **Title:** `Invalid score`
 
 The score doesn't fit the competition's `match_format`. For example, a set ends 6-5, or there's a match tiebreak in a competition that plays a full third set. The `errors` array points to each invalid set.
 
@@ -105,7 +105,7 @@ The score doesn't fit the competition's `match_format`. For example, a set ends 
 
 ### `validation-failed`
 
-**Status:** `422` · **Title:** Validation failed
+**Status:** `422` · **Title:** `Validation failed`
 
 The body is valid JSON, but a field breaks a rule. For example, the same player appears twice in `player_ids`, or `retired_player_id` isn't one of the two players. The `errors` array points to each invalid field.
 
@@ -113,7 +113,7 @@ The body is valid JSON, but a field breaks a rule. For example, the same player 
 
 ### `rate-limited`
 
-**Status:** `429` · **Title:** Rate limit reached
+**Status:** `429` · **Title:** `Rate limit reached`
 
 You sent more than 60 requests in a minute with the same API key or token.
 
@@ -139,6 +139,6 @@ You sent more than 60 requests in a minute with the same API key or token.
 
 ## Errors on the mock
 
-The [local mock](/portfolio/quickstart/) checks that each request matches the OpenAPI spec, but it doesn't run the API's business rules. When a request is invalid, the mock returns the operation's first error example from the spec, whatever the actual problem is: `422` with `validation-failed` for `POST /matches`, and `400` with `invalid-request` for read operations. It never returns errors that depend on data, such as `invalid-score` or `duplicate-match`.
+The [local mock](/portfolio/quickstart/) checks that each request matches the OpenAPI spec, but it doesn't run the business rules of the API. When a request is invalid, the mock returns the operation's first error example from the spec, whatever the actual problem is: `422` with `validation-failed` for `POST /matches`, and `400` with `invalid-request` for read operations. It never returns errors that depend on data, such as `invalid-score` or `duplicate-match`.
 
 To see the example response for a specific status, add a `Prefer` header to the request, such as `Prefer: code=404`.

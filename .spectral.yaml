@@ -1,3 +1,51 @@
-# Spectral ruleset for the OpenAPI spec. Custom rules arrive in phase 5.
+# Spectral ruleset for the OpenAPI spec: the standard OpenAPI rules plus house rules.
 extends:
   - spectral:oas
+
+rules:
+  krk-operation-summary-and-description:
+    description: Every operation has a summary, used as the reference page title, and a description.
+    message: 'Every operation needs a summary and a description.'
+    severity: error
+    given: $.paths[*][get,put,post,patch,delete]
+    then:
+      - field: summary
+        function: truthy
+      - field: description
+        function: truthy
+
+  krk-errors-use-problem-details:
+    description: 4xx responses use RFC 9457 problem details. The OAuth token endpoint is the one exception, because it follows RFC 6749.
+    message: '4xx responses must use application/problem+json.'
+    severity: error
+    given: $.paths[?(@property != '/oauth/token')][*].responses[?(@property.match(/^4/))]
+    then:
+      field: content
+      function: schema
+      functionOptions:
+        schema:
+          type: object
+          required: [application/problem+json]
+
+  krk-responses-have-examples:
+    description: Every response body has at least one example, so the mock and the reference have something to show.
+    message: 'This response body has no example.'
+    severity: error
+    given: $.paths[*][*].responses[*].content[*]
+    then:
+      function: schema
+      functionOptions:
+        schema:
+          anyOf:
+            - required: [examples]
+            - required: [example]
+
+  krk-no-dashes-in-text:
+    description: Spec text follows the docs style guide, so no em dashes or en dashes as punctuation.
+    message: 'Use a period, a comma, a colon, or parentheses instead of a dash.'
+    severity: error
+    given: $..[description,summary,title]
+    then:
+      function: pattern
+      functionOptions:
+        notMatch: '[—–]'

@@ -31,11 +31,27 @@ npm run check     # Astro type and content checks
 npm run lint:spec # Spectral on the OpenAPI spec, fails on warnings
 npm run mock      # Prism mock of the spec at http://127.0.0.1:4010
 npm run check:errors # every problem type in the spec has a section on the errors page
+npm run test:samples # every code sample in the docs, against the running mock
+npm run lint:prose   # Vale on the pages (needs the vale binary and `vale sync` once)
 ```
 
 To check the Bruno collection, start the mock, then run `npx @usebruno/cli run -r --env mock` from `collections/bruno/`. Every request must pass. When you add or rename an operation, update the collection in the same PR.
 
-Run `npm run lint:spec` after every spec change. It also validates every example against its schema. Vale, lychee, and sample tests arrive in phase 5. Add their commands here when they land.
+Run `npm run lint:spec` after every spec change. It also validates every example against its schema.
+
+## CI
+
+`.github/workflows/docs-ci.yml` runs five jobs on every PR, and all five must pass before merging to `main`:
+
+| Job | Runs | Config |
+|---|---|---|
+| Spec | `lint:spec`, `check:errors` | `.spectral.yaml` (`spectral:oas` plus `krk-*` house rules) |
+| Prose | Vale on `src/content/docs` | `.vale.ini`, `.vale/styles/KRK/`, vocabulary in `.vale/styles/config/vocabularies/KRK/accept.txt` |
+| Build | `astro check`, `astro build` | |
+| Links | lychee on the build, anchors included | `lychee.toml`. Links to `saverio-cirillo.com/portfolio` are remapped to the build |
+| Samples | Prism, `test:samples`, Bruno | Node 22 and Python 3.10, the minimum versions the docs promise |
+
+When Vale flags a correct project term, add it to the vocabulary instead of rewording. When it flags a real problem, fix the text, never the rule. Pin every GitHub Action to a commit SHA, with the version in a comment.
 
 ## Site configuration
 
@@ -120,5 +136,5 @@ These apply to every page, spec description, and README.
 - No positional references such as "above", "below", or "the following section". Link to the target instead.
 - Code samples come in curl, JavaScript, and Python, in that order, inside `<Tabs syncKey="lang">` so the reader's choice persists across pages.
 - Samples read the base URL and credentials from environment variables, never hard-coded values: `KRK_API_URL`, `KRK_API_KEY`, `KRK_AUTH_URL`, `KRK_CLIENT_ID`, `KRK_CLIENT_SECRET`, `KRK_ACCESS_TOKEN`. The same sample then runs against the mock, in CI, and in production.
-- Each sample is self-contained and runnable as is: JavaScript as an ES module on Node 22 (`fetch`, top-level `await`), Python 3.9 with `requests`. Check `response.ok` or call `raise_for_status()`.
+- Each sample is self-contained and runnable as is: JavaScript as an ES module on Node 22 (`fetch`, top-level `await`), Python 3.10 with `requests`. Check `response.ok` or call `raise_for_status()`.
 - Fictional people in examples have no stated gender. Refer to them by name, never with "he" or "she".

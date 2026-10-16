@@ -25,6 +25,20 @@ curl -H "X-API-Key: any-value" http://127.0.0.1:4010/players
 
 The mock checks that each request matches the spec and that credentials are present, but it doesn't run business logic.
 
+## Checks
+
+Every pull request runs five CI jobs: Spectral on the spec, Vale on the prose, the Astro build, lychee on links and anchors, and every code sample against the mock. To run them locally:
+
+```sh
+npm run lint:spec      # Spectral
+npm run check:errors   # every error type is documented
+npm run build
+npm run mock &         # then, in the same terminal:
+npm run test:samples   # every code sample in the docs
+```
+
+Vale and lychee need their own binaries: see [Vale](https://vale.sh/docs/install) and [lychee](https://github.com/lycheeverse/lychee#installation).
+
 To explore every operation in a client, open `collections/bruno/` in [Bruno](https://www.usebruno.com/) and select the `mock` environment. In Insomnia or Postman, import `openapi/krkplaystennis.v1.yaml` directly.
 
 ## License

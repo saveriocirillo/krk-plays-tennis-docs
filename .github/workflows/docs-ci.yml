@@ -1,0 +1,125 @@
+# Docs CI: every pull request and every push to main runs five independent checks.
+# Each job maps to one question a reviewer would ask, so a red job says what's wrong.
+name: Docs CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: docs-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  spec:
+    name: Spec (Spectral + error types)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Lint the OpenAPI spec
+        run: npm run lint:spec
+      - name: Check that every error type is documented
+        run: npm run check:errors
+
+  prose:
+    name: Prose (Vale)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: errata-ai/vale-action@518a9136acc6e6668ce7c00d367051e0941e87ff # v3.0.0
+        with:
+          version: 3.24.0
+          files: src/content/docs
+          fail_on_error: true
+          # Check every page, not only the lines a PR changes.
+          filter_mode: nofilter
+
+  build:
+    name: Build (Astro)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Check types and content
+        run: npm run check
+      - name: Build the site
+        run: npm run build
+
+  links:
+    name: Links (lychee)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Restore the link cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lycheecache
+          key: lychee-${{ github.sha }}
+          restore-keys: lychee-
+      - name: Check links and anchors
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
+        with:
+          lycheeVersion: v0.24.2
+          fail: true
+          # Absolute links to the production portal are checked against this build
+          # instead, so a PR is tested with its own pages.
+          args: >-
+            --config lychee.toml
+            --root-dir ${{ github.workspace }}/dist
+            --remap 'https://saverio-cirillo.com/portfolio file://${{ github.workspace }}/dist/portfolio'
+            --no-progress
+            'dist/portfolio/**/*.html'
+
+  samples:
+    name: Samples (Prism mock)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # The docs promise Node.js 22 and Python 3.10 or later, so test the minimum versions.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.10'
+      - run: npm ci
+      - run: pip install requests
+      - name: Start the mock
+        run: |
+          nohup npm run mock > prism.log 2>&1 &
+          for attempt in $(seq 1 60); do
+            grep -q "Prism is listening" prism.log && exit 0
+            sleep 1
+          done
+          cat prism.log
+          exit 1
+      - name: Run every code sample in the docs
+        run: npm run test:samples
+      - name: Run the Bruno collection
+        working-directory: collections/bruno
+        run: npx --yes @usebruno/cli@4.2.1 run -r --env mock

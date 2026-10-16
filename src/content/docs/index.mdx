@@ -34,15 +34,15 @@ The rating comes from results, not from the self-assessment. The self-assessed l
 | To | You need | Guide |
 |---|---|---|
 | Read any data | An API key | [Authenticate with an API key](/portfolio/authentication/api-key/) |
-| Submit match results | An OAuth access token with the `matches:write` scope | [Get an access token](/portfolio/authentication/access-token/) |
+| Submit match results | An OAuth 2.0 access token with the `matches:write` scope | [Get an access token](/portfolio/authentication/access-token/) |
 
 ## Conventions
 
 - **Base URL:** `https://api.krkplaystennis.example/v1`
-- **Format:** JSON requests and responses.
+- **Format:** requests and responses are JSON.
 - **Pagination:** list operations return `data` and a `next_cursor`. Pass `next_cursor` as `cursor` to get the next page.
-- **Errors:** [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details, with a `type` URL for each kind of error. See [Errors](/portfolio/errors/).
-- **Times:** RFC 3339 timestamps. Availability windows use local time in Kraków (`Europe/Warsaw`).
+- **Errors:** every error is an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details object, with a `type` URL for each kind of error. See [Errors](/portfolio/errors/).
+- **Times:** timestamps follow RFC 3339. Availability windows use local time in Kraków (`Europe/Warsaw`).
 
 ## Next steps
 
