@@ -844,7 +844,7 @@ paths:
   /venues:
     get:
       operationId: listVenues
-      summary: List venues
+      summary: List venues — all of them
       description: Returns tennis venues ordered by name.
       tags: [Venues]
       parameters:
