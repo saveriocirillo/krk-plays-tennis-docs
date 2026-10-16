@@ -67,7 +67,7 @@ paths:
 
         Tokens expire after 1 hour. There's no refresh token: request a new token when the current one expires.
 
-        This endpoint follows [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749#section-5.2), so its errors use the OAuth error format instead of problem details.
+        This endpoint follows [RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749#section-5.2), so its errors use the OAuth error format instead of problem details.
       tags: [Authentication]
       security:
         - ClientBasicAuth: []

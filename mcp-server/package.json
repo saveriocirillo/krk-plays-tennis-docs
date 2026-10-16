@@ -1,0 +1,27 @@
+{
+  "name": "krk-plays-tennis-mcp",
+  "version": "1.0.0",
+  "description": "A read-only MCP server for the fictional KRKplaysTennis API.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "bin": {
+    "krk-plays-tennis-mcp": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "node test/smoke.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^7.0.2"
+  }
+}

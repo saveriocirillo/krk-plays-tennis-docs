@@ -213,4 +213,4 @@ To avoid failed requests, keep the token and its expiry time in memory, and requ
 | `403` from `/matches` | `insufficient-scope` | The token doesn't have the `matches:write` scope. | Request a token with `scope=matches:write`. |
 | `403` from `/matches` | `not-competition-organizer` | Another organizer runs the competition. | Submit results only for your own competitions. |
 
-The token endpoint follows the OAuth 2.0 standard ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749#section-5.2)), so its errors have an `error` field. The rest of the API uses problem details, with a `type` field.
+The token endpoint follows the OAuth 2.0 standard ([RFC 6749](https://datatracker.ietf.org/doc/html/rfc6749#section-5.2)), so its errors have an `error` field. The rest of the API uses problem details, with a `type` field.

@@ -2,17 +2,39 @@
 // Keeps Starlight's default footer (edit link, pagination) and adds the
 // same credit line used on saverio-cirillo.com.
 import Default from '@astrojs/starlight/components/Footer.astro';
+import { markdownUrl } from '../lib/markdown-url';
 
 const year = new Date().getFullYear();
+const markdown = markdownUrl(Astro.locals.starlightRoute.entry.id, import.meta.env.BASE_URL);
 ---
 
 <Default />
+{
+	markdown && (
+		<p class="markdown-link">
+			<a href={markdown}>View this page as Markdown</a>
+		</p>
+	)
+}
 <p class="credit">
 	© {year} Saverio Cirillo · KRKplaysTennis is a fictional API · Built with{' '}
 	<a href="https://starlight.astro.build" target="_blank" rel="noopener noreferrer">Starlight</a>
 </p>
 
 <style>
+	.markdown-link {
+		margin-top: 1rem;
+		font-size: var(--sl-text-sm);
+	}
+
+	.markdown-link a {
+		color: var(--sl-color-gray-3);
+	}
+
+	.markdown-link a:hover {
+		color: var(--sl-color-white);
+	}
+
 	.credit {
 		margin-top: 2rem;
 		padding-top: 1.5rem;

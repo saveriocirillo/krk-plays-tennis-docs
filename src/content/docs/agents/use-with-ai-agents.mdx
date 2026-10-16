@@ -1,0 +1,100 @@
+---
+title: Use this API with AI agents
+description: Give an AI agent the KRKplaysTennis docs as plain text, or connect it to the API through a read-only MCP server.
+---
+
+AI agents can work with the KRKplaysTennis API in two ways: they can read the docs, or they can call the API through tools. This page covers both.
+
+## Give an agent the docs
+
+Every page in these docs is also published as plain text. Plain text leaves out the navigation and styling that agents don't need. Point an agent at the file that fits the task:
+
+| File | What it contains | Use it when |
+|---|---|---|
+| [`llms.txt`](/portfolio/llms.txt) | A short description of the API and links to everything else, following the [llms.txt convention](https://llmstxt.org/). | The agent needs to find its way around. Start here. |
+| [`llms-full.txt`](/portfolio/llms-full.txt) | Every page in one file. | The agent has a large context and needs everything. |
+| [`llms-small.txt`](/portfolio/llms-small.txt) | Every page, with notes, tips, and extra whitespace removed. | The agent has a small context. |
+| A page URL ending in `.md` | One page as Markdown, such as [`quickstart.md`](/portfolio/quickstart.md). Every page links to its Markdown version at the bottom. | The agent needs one task or concept. |
+| [`openapi.yaml`](/portfolio/openapi.yaml) | The OpenAPI 3.1 spec: every operation, parameter, schema, and example. | The agent writes code that calls the API. The spec is more precise than any page. |
+
+`llms.txt` also links to smaller sets, such as only the guides, so an agent can load part of the docs.
+
+## Connect an agent with the MCP server
+
+The [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) lets an AI app call external tools. The KRKplaysTennis MCP server turns the API into six tools that an agent can call while it answers a question:
+
+| Tool | What it does |
+|---|---|
+| `find_players` | Lists players with their rating, confidence, and availability. Use it to find a player ID by name. |
+| `get_player_rating` | Gets a player's current rating, confidence, and K-factor. |
+| `explain_rating_change` | Explains why a rating changed after a match, with the calculation redone step by step. |
+| `find_opponents` | Suggests opponents with a similar rating and overlapping availability. |
+| `list_matches` | Lists match results, filtered by player, competition, status, or date. |
+| `list_competitions` | Lists leagues and tournaments, with their match format. |
+
+`explain_rating_change` does the math in code, so the agent quotes the result instead of computing it. A language model can get arithmetic wrong, and a rating explanation that doesn't add up is worse than none.
+
+### Why the server is read-only
+
+The server has no tool to submit match results, on purpose. A submitted result changes two players' ratings. If an agent misreads a score or invents one, that mistake becomes data that other people see. Submitting results stays with the organizer's own integration, where a person checks each result.
+
+Every tool is marked with `readOnlyHint: true`, so MCP clients know the tools don't change anything.
+
+### Set up the server in Claude Code
+
+These steps connect the server to [Claude Code](https://code.claude.com/docs/en/overview), using the local mock as the API. Other MCP clients use the same command and environment variables.
+
+1. Start the mock, as in step 1 of the [quickstart](/portfolio/quickstart/), and keep it running.
+
+   The last line of the output is `Prism is listening on http://127.0.0.1:4010`.
+
+2. In a new terminal, clone the repository and build the server:
+
+   ```sh
+   git clone https://github.com/saveriocirillo/krk-plays-tennis-docs.git
+   cd krk-plays-tennis-docs/mcp-server
+   npm install
+   npm run build
+   ```
+
+   The build creates `dist/index.js`, the server.
+
+3. Add the server to Claude Code. The server reads the API URL and key from environment variables:
+
+   ```sh
+   claude mcp add krk-plays-tennis \
+     -e KRK_API_URL=http://127.0.0.1:4010 \
+     -e KRK_API_KEY=any-value \
+     -- node "$PWD/dist/index.js"
+   ```
+
+   To check it, run `claude mcp list`. The output lists `krk-plays-tennis` as connected.
+
+4. Start Claude Code and ask a question about a player:
+
+   ```text
+   Why did Ola K.'s rating change after the last match?
+   ```
+
+   Claude typically calls `find_players` to get Ola's player ID, then `explain_rating_change`. The answer explains that Ola won against a higher-rated opponent, with the calculation 48 × (1 - 0.334) = 32.
+
+To use the server in a client that reads a JSON configuration file, such as Claude Desktop, add an entry like this, with the absolute path to `dist/index.js`:
+
+```json
+{
+  "mcpServers": {
+    "krk-plays-tennis": {
+      "command": "node",
+      "args": ["/absolute/path/to/krk-plays-tennis-docs/mcp-server/dist/index.js"],
+      "env": {
+        "KRK_API_URL": "http://127.0.0.1:4010",
+        "KRK_API_KEY": "any-value"
+      }
+    }
+  }
+}
+```
+
+## What to expect from the mock
+
+The mock answers every request with the examples from the OpenAPI spec, so the agent always sees the same three players, three matches, and two competitions. It's enough to see how an agent uses the tools, but filters don't change the results. See [Errors on the mock](/portfolio/errors/#errors-on-the-mock).

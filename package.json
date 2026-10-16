@@ -17,13 +17,22 @@
     "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010",
     "check:errors": "node scripts/check-error-types.mjs",
     "test:samples": "node scripts/test-samples.mjs",
-    "lint:prose": "vale src/content/docs"
+    "lint:prose": "vale src/content/docs",
+    "check:markdown": "node scripts/check-markdown-pages.mjs"
   },
   "dependencies": {
+    "@astrojs/mdx": "^8.1.0",
     "@astrojs/starlight": "^0.42.6",
     "astro": "^7.4.0",
+    "hast-util-select": "^6.0.4",
+    "rehype-parse": "^9.0.1",
+    "rehype-remark": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-stringify": "^11.0.0",
     "sharp": "^0.35.5",
-    "starlight-openapi": "^0.27.0"
+    "starlight-llms-txt": "^0.12.0",
+    "starlight-openapi": "^0.27.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
