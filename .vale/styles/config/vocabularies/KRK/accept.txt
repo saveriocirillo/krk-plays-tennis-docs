@@ -21,3 +21,5 @@ Warsaw
 WSL
 MCP
 Claude
+Astro
+Vercel

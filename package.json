@@ -17,7 +17,7 @@
     "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010",
     "check:errors": "node scripts/check-error-types.mjs",
     "test:samples": "node scripts/test-samples.mjs",
-    "lint:prose": "vale src/content/docs",
+    "lint:prose": "vale src/content/docs README.md",
     "check:markdown": "node scripts/check-markdown-pages.mjs"
   },
   "dependencies": {
