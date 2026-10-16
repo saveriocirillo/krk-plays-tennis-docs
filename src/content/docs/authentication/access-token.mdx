@@ -46,6 +46,8 @@ Only competition organizers get client credentials, and a token can only submit 
    </TabItem>
    <TabItem label="JavaScript">
 
+   Save this code as `get-token.mjs`, then run `node get-token.mjs`:
+
    ```js
    const credentials = Buffer.from(
      `${process.env.KRK_CLIENT_ID}:${process.env.KRK_CLIENT_SECRET}`,
@@ -63,6 +65,8 @@ Only competition organizers get client credentials, and a token can only submit 
 
    </TabItem>
    <TabItem label="Python">
+
+   Save this code as `get_token.py`, then run `python3 get_token.py`:
 
    ```python
    import os
@@ -93,10 +97,10 @@ Only competition organizers get client credentials, and a token can only submit 
    }
    ```
 
-3. Store the `access_token` value in an environment variable:
+3. Copy the `access_token` value from the response in step 2, and store it in an environment variable:
 
    ```sh
-   export KRK_ACCESS_TOKEN=eyJhbGciOiJSUzI1NiJ9.fictional-token-for-docs.c2lnbmF0dXJl
+   export KRK_ACCESS_TOKEN='<access_token from step 2>'
    ```
 
    To check it, run `echo $KRK_ACCESS_TOKEN`. The output is the token.
@@ -127,6 +131,8 @@ Only competition organizers get client credentials, and a token can only submit 
    </TabItem>
    <TabItem label="JavaScript">
 
+   Save this code as `submit-match.mjs`, then run `node submit-match.mjs`:
+
    ```js
    const response = await fetch(`${process.env.KRK_API_URL}/matches`, {
      method: 'POST',
@@ -154,6 +160,8 @@ Only competition organizers get client credentials, and a token can only submit 
 
    </TabItem>
    <TabItem label="Python">
+
+   Save this code as `submit_match.py`, then run `python3 submit_match.py`:
 
    ```python
    import os
