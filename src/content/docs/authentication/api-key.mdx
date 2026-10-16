@@ -40,6 +40,8 @@ An API key can only read data. To submit match results, you need an access token
    </TabItem>
    <TabItem label="JavaScript">
 
+   Save this code as `get-player.mjs`, then run `node get-player.mjs`:
+
    ```js
    const response = await fetch(`${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4`, {
      headers: { 'X-API-Key': process.env.KRK_API_KEY },
@@ -51,6 +53,8 @@ An API key can only read data. To submit match results, you need an access token
 
    </TabItem>
    <TabItem label="Python">
+
+   Save this code as `get_player.py`, then run `python3 get_player.py`:
 
    ```python
    import os
