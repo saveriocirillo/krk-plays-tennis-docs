@@ -9,6 +9,7 @@ exceptions:
   - JSON
   - K-factor
   - KRKplaysTennis
+  - krk-plays-tennis-docs
   - NTRP
   - OAuth
   - '\d+\.\d+\.\d+'

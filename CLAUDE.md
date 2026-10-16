@@ -16,6 +16,17 @@ A public docs portal for a fictional API, built as Saverio Cirillo's technical w
 - **Fictional data only.** No real people, clubs, venues, or companies. No branding or content from Kong, Sabre, or Ververica.
 - **Small scope.** A small, polished portal beats a big, unfinished one. Don't add pages or features outside the current phase.
 
+## Skills
+
+Use the skills in `.claude/skills/` for these tasks:
+
+| Task | Skill |
+|---|---|
+| Any change to prose: pages, spec descriptions, README | `style-guide` |
+| A new task guide | `how-to-template` |
+| A changelog entry, or a spec change users would notice | `release-notes` |
+| Reviewing a change to the OpenAPI spec | `reference-review` |
+
 ## Git workflow
 
 - Never commit to `main`. One branch per phase, named `phase-N/short-name`.

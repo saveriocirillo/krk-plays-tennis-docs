@@ -43,7 +43,7 @@ jobs:
       - uses: errata-ai/vale-action@518a9136acc6e6668ce7c00d367051e0941e87ff # v3.0.0
         with:
           version: 3.24.0
-          files: src/content/docs
+          files: '["src/content/docs", "README.md"]'
           fail_on_error: true
           # Check every page, not only the lines a PR changes.
           filter_mode: nofilter
