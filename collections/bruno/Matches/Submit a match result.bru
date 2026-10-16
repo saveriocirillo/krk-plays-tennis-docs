@@ -1,0 +1,42 @@
+meta {
+  name: Submit a match result
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/matches
+  body: json
+  auth: bearer
+}
+
+headers {
+  Idempotency-Key: {{$randomUUID}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "competition_id": "cmp_6tw2hn8rxe",
+    "venue_id": "ven_7hk2p9wq4m",
+    "court_number": 2,
+    "played_at": "2026-10-10T18:00:00+02:00",
+    "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+    "status": "completed",
+    "score": {
+      "sets": [{ "games": [6, 4] }, { "games": [3, 6] }],
+      "match_tiebreak": [10, 7]
+    }
+  }
+}
+
+assert {
+  res.status: eq 201
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/creatematch/
+}

@@ -13,15 +13,18 @@
     "preview": "astro preview",
     "check": "astro check",
     "astro": "astro",
-    "lint:spec": "spectral lint openapi/krkplaystennis.v1.yaml --fail-severity=warn"
+    "lint:spec": "spectral lint openapi/krkplaystennis.v1.yaml --fail-severity=warn",
+    "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",
     "astro": "^7.4.0",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "starlight-openapi": "^0.27.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@stoplight/prism-cli": "^5.16.0",
     "@stoplight/spectral-cli": "^6.17.0",
     "typescript": "^6.0.3"
   }

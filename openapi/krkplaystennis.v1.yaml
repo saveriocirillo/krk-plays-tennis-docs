@@ -11,11 +11,6 @@ info:
 
     KRKplaysTennis is a fictional API. All players, venues, competitions, and organizers are invented.
 
-    ## Authentication
-
-    - Read operations need an API key in the `X-API-Key` header.
-    - `POST /matches` needs an OAuth 2.0 access token with the `matches:write` scope, sent as `Authorization: Bearer <token>`. Competition organizers get tokens with the client credentials flow.
-
     ## Pagination
 
     List operations return up to `limit` items in `data`. When more items exist, `next_cursor` holds a value to pass as `cursor` in the next request. When `next_cursor` is `null`, you have the last page.
@@ -178,7 +173,7 @@ paths:
       description: |
         Returns a player's current rating, confidence, and the K-factor that applies to their next rated match.
 
-        To see how the rating got to its current value, list the player's rating history.
+        To see how the rating got to its current value, [list the player's rating history](https://saverio-cirillo.com/portfolio/reference/operations/listplayerratinghistory/).
       tags: [Ratings]
       parameters:
         - $ref: '#/components/parameters/PlayerIdPath'
@@ -611,17 +606,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
               examples:
-                invalidScore:
-                  summary: Score that can't end a set
-                  value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#invalid-score
-                    title: Invalid score
-                    status: 422
-                    detail: The score isn't valid for the competition's match format.
-                    instance: /v1/matches
-                    errors:
-                      - pointer: /score/sets/0/games
-                        detail: In this competition, a set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score.
                 validationFailed:
                   summary: Same player on both sides
                   value:
@@ -633,6 +617,17 @@ paths:
                     errors:
                       - pointer: /player_ids
                         detail: The two players must be different.
+                invalidScore:
+                  summary: Score that can't end a set
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#invalid-score
+                    title: Invalid score
+                    status: 422
+                    detail: The score isn't valid for the competition's match format.
+                    instance: /v1/matches
+                    errors:
+                      - pointer: /score/sets/0/games
+                        detail: In this competition, a set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score.
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
@@ -876,10 +871,10 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: An API key for read operations. Send it in the `X-API-Key` header with every request.
+      description: An API key for every read operation. Send it in the `X-API-Key` header with each request.
     OAuth2ClientCredentials:
       type: oauth2
-      description: Access tokens for competition organizers, issued with the client credentials flow. Tokens expire after 1 hour.
+      description: An OAuth 2.0 access token for `POST /matches`, the only write operation. Competition organizers get tokens with the client credentials flow, and each token expires after 1 hour. Send it in the `Authorization` header as `Bearer <token>`.
       flows:
         clientCredentials:
           tokenUrl: https://auth.krkplaystennis.example/oauth/token
@@ -1356,6 +1351,7 @@ components:
           maxItems: 2
     CompletedMatchInput:
       title: Completed match
+      description: A match played to the end. Send the full score.
       allOf:
         - $ref: '#/components/schemas/MatchInputBase'
         - type: object
@@ -1367,6 +1363,7 @@ components:
               $ref: '#/components/schemas/Score'
     RetiredMatchInput:
       title: Retired match
+      description: A match that ended when a player stopped. Send the score up to that point and the player who retired.
       allOf:
         - $ref: '#/components/schemas/MatchInputBase'
         - type: object
@@ -1381,6 +1378,7 @@ components:
               $ref: '#/components/schemas/PlayerId'
     WalkoverMatchInput:
       title: Walkover
+      description: A match that wasn't played. Send the player who advances. There's no score.
       allOf:
         - $ref: '#/components/schemas/MatchInputBase'
         - type: object
