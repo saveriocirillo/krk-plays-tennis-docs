@@ -1,0 +1,7 @@
+extends: existence
+message: "Don't use '%s' as punctuation. Use a period, a comma, a colon, or parentheses."
+level: error
+nonword: true
+tokens:
+  - '—'
+  - '–'

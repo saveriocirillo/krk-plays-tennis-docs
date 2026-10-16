@@ -1,0 +1,15 @@
+extends: existence
+message: "Avoid marketing language: '%s'. Say what the API does."
+level: warning
+ignorecase: true
+tokens:
+  - seamless(?:ly)?
+  - effortless(?:ly)?
+  - simply
+  - easily
+  - powerful
+  - robust
+  - cutting-edge
+  - best-in-class
+  - world-class
+  - blazing(?:ly)? fast

@@ -1,0 +1,23 @@
+# lychee link checker configuration, used by the links job in CI.
+# Run from the repository root after `npm run build`.
+
+include_fragments = "full"
+index_files = ["index.html"]
+max_retries = 3
+retry_wait_time = 5
+timeout = 20
+accept = ["200..=299", "429"]
+cache = true
+max_cache_age = "1d"
+
+exclude = [
+  # Fictional hosts: .example never resolves.
+  'krkplaystennis\.example',
+  # The local mock, mentioned in the quickstart.
+  '^https?://(127\.0\.0\.1|localhost)',
+  # "Edit page" links point to main, where a page added in a PR doesn't exist yet.
+  'github\.com/saveriocirillo/krk-plays-tennis-docs/edit/',
+]
+
+# Starlight's 404 page has a canonical link to /404/, which isn't a page.
+exclude_path = ['dist/portfolio/404\.html']

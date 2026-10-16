@@ -1,0 +1,10 @@
+extends: existence
+message: "Don't use positional references like '%s'. Link to the section instead."
+level: error
+ignorecase: true
+tokens:
+  - above
+  - below
+  - the following section
+  - the previous section
+  - the preceding
