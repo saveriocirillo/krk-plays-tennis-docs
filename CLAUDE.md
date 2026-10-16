@@ -67,7 +67,8 @@ The API reference is generated under `/reference/`. Add sidebar entries in `astr
 - `POST /matches` takes an `Idempotency-Key` header.
 - Matches have `status` (`completed`, `retired`, `walkover`) and a separate `rating_status` (`pending`, `rated`, `not_rated`).
 - Player availability is a list of weekly time windows plus preferred venues. There's no calendar integration.
-- Not in v1: doubles, webhooks, player registration, Arazzo workflows.
+- `match_format` on a competition is an object of independent rules (`games_per_set`, `no_ad`, `final_set`), never an enum of named formats. Extend it with new optional fields, such as `tiebreak_at` for Fast4 (tiebreak at 3-3), so existing clients don't break.
+- Not in v1: doubles, webhooks, player registration, Arazzo workflows, `tiebreak_at`.
 
 ## Rating model
 
@@ -95,7 +96,7 @@ All examples share one fictional dataset. Reuse these IDs and numbers instead of
 - `mat_4nc8xq2vbt`: Ola beats Kasia 6-4 3-6 [10-7]. Ola +32 (expected 0.334, K 48), Kasia -21 (expected 0.666, K 32).
 - `mat_7rk3mw9zse`: Marta retires against Tomek at 6-2 2-1. Tomek wins 8 of 11 games: actual 0.727, expected 0.360, +18. Marta -18.
 - `mat_2vb6np4ktf`: Kasia wins a walkover against Tomek. Not rated.
-- Competitions: `cmp_6tw2hn8rxe` Kraków Autumn League 2026 (league, `best_of_3_match_tiebreak`), `cmp_1qv7mz3kpd` Nowa Huta Indoor Open 2026 (tournament, `best_of_3`).
+- Competitions: `cmp_6tw2hn8rxe` Kraków Autumn League 2026 (league: sets to 6 with ads, match tiebreak), `cmp_1qv7mz3kpd` Nowa Huta Indoor Open 2026 (tournament: sets to 4, no-ad, match tiebreak).
 - Venues: `ven_7hk2p9wq4m` Riverside Courts Podgórze, `ven_3xr8tn5cva` Nowa Huta Indoor Tennis Hall.
 
 ## Style rules
