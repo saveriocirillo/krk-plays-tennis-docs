@@ -1,0 +1,47 @@
+---
+title: Changelog
+description: Changes to the KRKplaysTennis API, newest first, with migration steps for breaking changes.
+---
+
+This page lists every change to the KRKplaysTennis API, newest first. The API follows [semantic versioning](https://semver.org/): from 1.0.0, a breaking change only happens in a new major version, with a new base URL such as `/v2`.
+
+## 1.0.0
+
+*October 16, 2026*
+
+The first stable version. There are no changes to endpoints or schemas since 0.9.0.
+
+### Changed
+
+- The v1 contract is now stable. Fields, parameters, and error types in v1 won't be removed or renamed. New optional fields and new operations can still appear, so ignore fields you don't recognize.
+
+## 0.9.0 (beta)
+
+*October 9, 2026*
+
+### Breaking changes
+
+- **`match_format` on competitions is now an object.** It was a string enum with the values `best_of_3` and `best_of_3_match_tiebreak`. It's now an object with three independent rules, so it can describe short sets and no-ad scoring:
+
+  ```json
+  "match_format": {
+    "games_per_set": 6,
+    "no_ad": false,
+    "final_set": "match_tiebreak"
+  }
+  ```
+
+  To migrate, map the old values like this:
+
+  | Old value | New object |
+  |---|---|
+  | `best_of_3` | `{ "games_per_set": 6, "no_ad": false, "final_set": "full_set" }` |
+  | `best_of_3_match_tiebreak` | `{ "games_per_set": 6, "no_ad": false, "final_set": "match_tiebreak" }` |
+
+  If your code reads `match_format`, read the three fields instead of comparing strings. If it validates scores before you submit them, use `games_per_set` to check where a set ends.
+
+### Added
+
+- **Short sets.** Competitions can use sets to 4 games (`"games_per_set": 4`), with a tiebreak at 4-4. A set ends at 4 games with a 2-game lead, at 5-3, or at 5-4 with a tiebreak.
+- **No-ad scoring.** `no_ad` shows whether a game at deuce is decided by a single point. The API records games, not points, so it doesn't affect score validation or ratings.
+- **`POST /oauth/token` in the OpenAPI spec.** The token endpoint on the authorization server is now documented in the [API reference](/portfolio/reference/operations/getaccesstoken/), and the mock serves it, so you can test the whole client credentials flow locally.

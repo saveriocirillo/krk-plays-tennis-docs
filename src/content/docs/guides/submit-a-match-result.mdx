@@ -1,0 +1,299 @@
+---
+title: Submit a match result
+description: Submit the result of a singles match in a competition you organize, then check that the API has rated it.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+As a competition organizer, you submit each match result with `POST /matches`. The API records the result immediately and updates both players' ratings a few minutes later.
+
+This guide submits the result of a match in the Kraków Autumn League: Ola K. beat Kasia W. 6-4 3-6 [10-7].
+
+## Before you begin
+
+- An access token with the `matches:write` scope in `KRK_ACCESS_TOKEN`. See [Get an access token](/portfolio/authentication/access-token/).
+- An API key in `KRK_API_KEY`, to read the competition and the match. See [Authenticate with an API key](/portfolio/authentication/api-key/).
+- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+
+## Steps
+
+1. Get the competition, to check its match format:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/competitions/cmp_6tw2hn8rxe" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `get-competition.mjs`, then run `node get-competition.mjs`:
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/competitions/cmp_6tw2hn8rxe`, {
+     headers: { 'X-API-Key': process.env.KRK_API_KEY },
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const competition = await response.json();
+   console.log(competition.match_format);
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `get_competition.py`, then run `python3 get_competition.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/competitions/cmp_6tw2hn8rxe",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print(response.json()["match_format"])
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response includes the competition's `match_format`:
+
+   ```json
+   "match_format": {
+     "games_per_set": 6,
+     "no_ad": false,
+     "final_set": "match_tiebreak"
+   }
+   ```
+
+   In this league, a set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. At one set all, a match tiebreak to 10 points replaces the third set. The API rejects a score that doesn't fit these rules.
+
+2. Build the request body. List the two players in `player_ids`, then write every score pair in the same order:
+
+   ```json
+   {
+     "competition_id": "cmp_6tw2hn8rxe",
+     "venue_id": "ven_7hk2p9wq4m",
+     "court_number": 2,
+     "played_at": "2026-10-10T18:00:00+02:00",
+     "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+     "status": "completed",
+     "score": {
+       "sets": [{ "games": [6, 4] }, { "games": [3, 6] }],
+       "match_tiebreak": [10, 7]
+     }
+   }
+   ```
+
+   Ola (`plr_2b7xq9mhk4`) is first, so `[6, 4]` means Ola won the first set 6-4. You don't send the winner: the API works it out from the score. For a match that ended in a retirement or a walkover, see [Retirements and walkovers](#retirements-and-walkovers).
+
+3. Submit the result with a new `Idempotency-Key`:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/matches" \
+     --header "Authorization: Bearer $KRK_ACCESS_TOKEN" \
+     --header "Idempotency-Key: $(uuidgen)" \
+     --header "Content-Type: application/json" \
+     --data '{
+       "competition_id": "cmp_6tw2hn8rxe",
+       "venue_id": "ven_7hk2p9wq4m",
+       "court_number": 2,
+       "played_at": "2026-10-10T18:00:00+02:00",
+       "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+       "status": "completed",
+       "score": {
+         "sets": [{ "games": [6, 4] }, { "games": [3, 6] }],
+         "match_tiebreak": [10, 7]
+       }
+     }'
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `submit-result.mjs`, then run `node submit-result.mjs`:
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/matches`, {
+     method: 'POST',
+     headers: {
+       Authorization: `Bearer ${process.env.KRK_ACCESS_TOKEN}`,
+       'Idempotency-Key': crypto.randomUUID(),
+       'Content-Type': 'application/json',
+     },
+     body: JSON.stringify({
+       competition_id: 'cmp_6tw2hn8rxe',
+       venue_id: 'ven_7hk2p9wq4m',
+       court_number: 2,
+       played_at: '2026-10-10T18:00:00+02:00',
+       player_ids: ['plr_2b7xq9mhk4', 'plr_9fz3tr6wn1'],
+       status: 'completed',
+       score: {
+         sets: [{ games: [6, 4] }, { games: [3, 6] }],
+         match_tiebreak: [10, 7],
+       },
+     }),
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const match = await response.json();
+   console.log(match.id, match.rating_status);
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `submit_result.py`, then run `python3 submit_result.py`:
+
+   ```python
+   import os
+   import uuid
+
+   import requests
+
+   response = requests.post(
+       f"{os.environ['KRK_API_URL']}/matches",
+       headers={
+           "Authorization": f"Bearer {os.environ['KRK_ACCESS_TOKEN']}",
+           "Idempotency-Key": str(uuid.uuid4()),
+       },
+       json={
+           "competition_id": "cmp_6tw2hn8rxe",
+           "venue_id": "ven_7hk2p9wq4m",
+           "court_number": 2,
+           "played_at": "2026-10-10T18:00:00+02:00",
+           "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+           "status": "completed",
+           "score": {
+               "sets": [{"games": [6, 4]}, {"games": [3, 6]}],
+               "match_tiebreak": [10, 7],
+           },
+       },
+   )
+   response.raise_for_status()
+
+   match = response.json()
+   print(match["id"], match["rating_status"])
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response has status `201`. The new match has the ID `mat_4nc8xq2vbt`, `"winner_id": "plr_2b7xq9mhk4"`, and `"rating_status": "pending"`.
+
+   If the request fails with a network error, retry it with the **same** `Idempotency-Key`. The API returns the original response instead of recording the match twice. In a real integration, generate the key once per result and store it with the result.
+
+4. A few minutes later, get the match to check that it's rated:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/matches/mat_4nc8xq2vbt" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `get-match.mjs`, then run `node get-match.mjs`:
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/matches/mat_4nc8xq2vbt`, {
+     headers: { 'X-API-Key': process.env.KRK_API_KEY },
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const match = await response.json();
+   console.log(match.rating_status);
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `get_match.py`, then run `python3 get_match.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/matches/mat_4nc8xq2vbt",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print(response.json()["rating_status"])
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The match has `"rating_status": "rated"`. Both players' ratings are updated: Ola's rating went from 1400 to 1432. To see why, follow [Explain a rating change](/portfolio/guides/explain-a-rating-change/).
+
+## Retirements and walkovers
+
+The fields you send depend on how the match ended:
+
+| `status` | When to use it | Also send | Rated? |
+|---|---|---|---|
+| `completed` | The match was played to the end. | `score` | Yes |
+| `retired` | A player stopped during the match. | `score` up to the retirement, and `retired_player_id` | Yes, on the games played |
+| `walkover` | A player didn't show up or withdrew before the match. | `winner_id`, and no `score` | No |
+
+For a retired match, the last set can be unfinished. In this example, Marta Z. retired at 6-2 2-1 for Tomek B.:
+
+```json
+{
+  "competition_id": "cmp_6tw2hn8rxe",
+  "venue_id": "ven_3xr8tn5cva",
+  "court_number": 1,
+  "played_at": "2026-10-08T19:00:00+02:00",
+  "player_ids": ["plr_5jd8vk2lc7", "plr_8mq4ws1yd6"],
+  "status": "retired",
+  "retired_player_id": "plr_8mq4ws1yd6",
+  "score": {
+    "sets": [{ "games": [6, 2] }, { "games": [2, 1] }]
+  }
+}
+```
+
+For a walkover, send the player who advances. The response has `"rating_status": "not_rated"`:
+
+```json
+{
+  "competition_id": "cmp_6tw2hn8rxe",
+  "venue_id": "ven_7hk2p9wq4m",
+  "played_at": "2026-10-05T10:00:00+02:00",
+  "player_ids": ["plr_9fz3tr6wn1", "plr_5jd8vk2lc7"],
+  "status": "walkover",
+  "winner_id": "plr_9fz3tr6wn1"
+}
+```
+
+To learn how a retirement affects the two ratings, see [How ratings work](/portfolio/concepts/how-ratings-work/#worked-example-a-retired-match).
+
+## If the request fails
+
+| Status | `type` | Cause | Fix |
+|---|---|---|---|
+| `401` | [`unauthenticated`](/portfolio/errors/#unauthenticated) | The token is missing or expired. | [Get a new token](/portfolio/authentication/access-token/). |
+| `403` | [`not-competition-organizer`](/portfolio/errors/#not-competition-organizer) | Another organizer runs this competition. | Check `competition_id`. |
+| `409` | [`duplicate-match`](/portfolio/errors/#duplicate-match) | The API already has a match with these players in this competition at this time. | Get the existing match instead of submitting it again. |
+| `409` | [`idempotency-conflict`](/portfolio/errors/#idempotency-conflict) | You reused an `Idempotency-Key` with a different body. | Use a new key for each new result. |
+| `422` | [`invalid-score`](/portfolio/errors/#invalid-score) | The score doesn't fit the competition's match format. | Compare each set with `match_format`, from step 1. |
+| `422` | [`validation-failed`](/portfolio/errors/#validation-failed) | A field is missing or invalid. | Check the `errors` array in the response, which points to each invalid field. |

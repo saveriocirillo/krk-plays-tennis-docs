@@ -1,0 +1,157 @@
+---
+title: Find opponents for a player
+description: Get suggested opponents with a similar rating and overlapping availability, and narrow them to a venue.
+sidebar:
+  order: 3
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Match suggestions help a player find a fair game: opponents with a similar rating who are free at the same time. The API ranks them by how close their rating is, and every suggestion shares at least one weekly time window with the player.
+
+This guide finds opponents for Ola K. (`plr_2b7xq9mhk4`), rated 1432, who is free on Tuesday evenings and Saturday mornings.
+
+## Before you begin
+
+- An API key in `KRK_API_KEY`. See [Authenticate with an API key](/portfolio/authentication/api-key/).
+- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+
+## Steps
+
+1. Get the suggestions for the player. `max_rating_gap` sets how far an opponent's rating can be from the player's, in either direction:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players/plr_2b7xq9mhk4/match-suggestions?max_rating_gap=150&limit=5" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `suggestions.mjs`, then run `node suggestions.mjs`:
+
+   ```js
+   const params = new URLSearchParams({ max_rating_gap: '150', limit: '5' });
+
+   const response = await fetch(
+     `${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4/match-suggestions?${params}`,
+     { headers: { 'X-API-Key': process.env.KRK_API_KEY } },
+   );
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const { data } = await response.json();
+   for (const suggestion of data) {
+     const windows = suggestion.overlapping_availability
+       .map((w) => `${w.day} ${w.start}-${w.end}`)
+       .join(', ');
+     console.log(`${suggestion.player.display_name}: gap ${suggestion.rating_gap}, ${windows}`);
+   }
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `suggestions.py`, then run `python3 suggestions.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/plr_2b7xq9mhk4/match-suggestions",
+       params={"max_rating_gap": 150, "limit": 5},
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   for suggestion in response.json()["data"]:
+       windows = ", ".join(
+           f"{w['day']} {w['start']}-{w['end']}" for w in suggestion["overlapping_availability"]
+       )
+       print(f"{suggestion['player']['display_name']}: gap {suggestion['rating_gap']}, {windows}")
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response suggests two opponents, closest rating first. The JavaScript and Python examples print:
+
+   ```text
+   Marta Z.: gap 50, tuesday 19:00-21:00
+   Kasia W.: gap 67, saturday 10:00-13:00
+   ```
+
+   Tomek B. isn't suggested. The rating gap is within 150, but Tomek is only free on Thursdays, which don't overlap with Ola's windows.
+
+2. Read each suggestion to plan the match:
+
+   - `rating_gap`: the difference between the two ratings. A smaller gap means a closer match.
+   - `overlapping_availability`: the weekly time windows when both players are free, in Kraków local time (`Europe/Warsaw`). Propose a match inside one of them.
+   - `shared_venue_ids`: venues both players prefer. It can be empty. Both suggestions here share Riverside Courts Podgórze (`ven_7hk2p9wq4m`).
+
+   You have an opponent, a day and time, and a venue to propose.
+
+3. To suggest only opponents who play at a specific venue, add `venue_id`:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players/plr_2b7xq9mhk4/match-suggestions?venue_id=ven_7hk2p9wq4m" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `suggestions-at-venue.mjs`, then run `node suggestions-at-venue.mjs`:
+
+   ```js
+   const params = new URLSearchParams({ venue_id: 'ven_7hk2p9wq4m' });
+
+   const response = await fetch(
+     `${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4/match-suggestions?${params}`,
+     { headers: { 'X-API-Key': process.env.KRK_API_KEY } },
+   );
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const { data } = await response.json();
+   console.log(data.map((s) => s.player.display_name));
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `suggestions_at_venue.py`, then run `python3 suggestions_at_venue.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/plr_2b7xq9mhk4/match-suggestions",
+       params={"venue_id": "ven_7hk2p9wq4m"},
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print([s["player"]["display_name"] for s in response.json()["data"]])
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response lists only opponents who prefer Riverside Courts Podgórze. Both Marta Z. and Kasia W. do, so the result is the same as in step 1.
+
+## If there are no suggestions
+
+An empty `data` array means no player fits both the rating gap and the availability. Try one of these:
+
+- Raise `max_rating_gap`, up to 500. The default is 150.
+- Remove `venue_id`, if you set it.
+- Ask the player to add more availability windows to their profile.

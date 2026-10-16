@@ -14,7 +14,8 @@
     "check": "astro check",
     "astro": "astro",
     "lint:spec": "spectral lint openapi/krkplaystennis.v1.yaml --fail-severity=warn",
-    "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010"
+    "mock": "prism mock openapi/krkplaystennis.v1.yaml --host 127.0.0.1 --port 4010",
+    "check:errors": "node scripts/check-error-types.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",
@@ -26,6 +27,7 @@
     "@astrojs/check": "^0.9.10",
     "@stoplight/prism-cli": "^5.16.0",
     "@stoplight/spectral-cli": "^6.17.0",
+    "github-slugger": "^2.0.0",
     "typescript": "^6.0.3"
   }
 }

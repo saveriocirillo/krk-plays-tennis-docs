@@ -1,0 +1,144 @@
+---
+title: Errors
+description: Every error the KRKplaysTennis API returns, what causes it, and how to fix it.
+---
+
+When a request fails, the API returns a `4xx` status and a body in the [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details format, with the `application/problem+json` media type:
+
+```json
+{
+  "type": "https://saverio-cirillo.com/portfolio/errors/#invalid-score",
+  "title": "Invalid score",
+  "status": 422,
+  "detail": "The score isn't valid for the competition's match format.",
+  "instance": "/v1/matches",
+  "errors": [
+    {
+      "pointer": "/score/sets/0/games",
+      "detail": "In this competition, a set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score."
+    }
+  ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `type` | A URL that identifies the kind of error. It links to the matching section of this page. |
+| `title` | A short summary. It's the same for every error of the same `type`. |
+| `status` | The HTTP status code. |
+| `detail` | What went wrong in this request. |
+| `instance` | The request path. |
+| `errors` | For `invalid-request`, `invalid-score`, and `validation-failed` only: one item per invalid field. `pointer` is a JSON Pointer to the field in the request body, or `#/` followed by the name of a query parameter. |
+
+In your code, branch on `type`, not on `title` or `detail`. The wording of `title` and `detail` can change, and `type` doesn't.
+
+The token endpoint, `POST /oauth/token`, is the one exception: it follows OAuth 2.0 and uses a different format. See [Token endpoint errors](#token-endpoint-errors).
+
+## Error types
+
+### `invalid-request`
+
+**Status:** `400` · **Title:** Invalid request
+
+The request is malformed: a query parameter has the wrong type or is out of range, or the body isn't valid JSON. The `errors` array lists each invalid parameter.
+
+**Fix:** check each item in `errors`. For example, `limit` must be between 1 and 100.
+
+### `unauthenticated`
+
+**Status:** `401` · **Title:** Authentication required
+
+The request has no credentials, or they aren't valid:
+
+- For a read, the `X-API-Key` header is missing or the key isn't valid.
+- For `POST /matches`, the access token is missing or expired.
+
+**Fix:** see [Authenticate with an API key](/portfolio/authentication/api-key/), or [get a new access token](/portfolio/authentication/access-token/). Tokens expire after 1 hour.
+
+### `insufficient-scope`
+
+**Status:** `403` · **Title:** Insufficient scope
+
+The access token is valid but doesn't have the `matches:write` scope.
+
+**Fix:** request a new token with `scope=matches:write`.
+
+### `not-competition-organizer`
+
+**Status:** `403` · **Title:** Not the competition organizer
+
+You tried to submit a result for a competition that another organizer runs. A token can only submit results for its own organizer's competitions.
+
+**Fix:** check `competition_id`. To see who runs a competition, get it and read `organizer`.
+
+### `not-found`
+
+**Status:** `404` · **Title:** Not found
+
+No resource exists with the ID in the path.
+
+**Fix:** check the ID and its prefix: `plr_` for players, `mat_` for matches, `cmp_` for competitions, and `ven_` for venues.
+
+### `duplicate-match`
+
+**Status:** `409` · **Title:** Duplicate match
+
+The API already has a match with the same two players, in the same competition, at the same `played_at` time. `detail` includes the ID of the existing match.
+
+**Fix:** if you're submitting the same result again, get the existing match instead. If it's a different match, check `played_at`.
+
+### `idempotency-conflict`
+
+**Status:** `409` · **Title:** Idempotency key conflict
+
+You sent an `Idempotency-Key` that was already used in the last 24 hours, with a different request body.
+
+**Fix:** use a new key for each new result. Reuse a key only to retry the exact same request.
+
+### `invalid-score`
+
+**Status:** `422` · **Title:** Invalid score
+
+The score doesn't fit the competition's `match_format`. For example, a set ends 6-5, or there's a match tiebreak in a competition that plays a full third set. The `errors` array points to each invalid set.
+
+**Fix:** get the competition and compare each set with its `match_format`. See [Submit a match result](/portfolio/guides/submit-a-match-result/).
+
+### `validation-failed`
+
+**Status:** `422` · **Title:** Validation failed
+
+The body is valid JSON, but a field breaks a rule. For example, the same player appears twice in `player_ids`, or `retired_player_id` isn't one of the two players. The `errors` array points to each invalid field.
+
+**Fix:** check each item in `errors`.
+
+### `rate-limited`
+
+**Status:** `429` · **Title:** Rate limit reached
+
+You sent more than 60 requests in a minute with the same API key or token.
+
+**Fix:** wait for the number of seconds in the `Retry-After` header, then retry.
+
+## Token endpoint errors
+
+`POST /oauth/token` follows the OAuth 2.0 standard ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749#section-5.2)). Its errors are JSON objects with an `error` code and an `error_description`:
+
+```json
+{
+  "error": "invalid_client",
+  "error_description": "The client ID or client secret is invalid."
+}
+```
+
+| Status | `error` | Cause | Fix |
+|---|---|---|---|
+| `401` | `invalid_client` | The client ID or client secret is wrong. | Check both values, and send them with HTTP Basic authentication. |
+| `400` | `invalid_scope` | The requested scope doesn't exist. | Request `matches:write`, the only scope. |
+| `400` | `unsupported_grant_type` | `grant_type` isn't `client_credentials`. | Send `grant_type=client_credentials`. |
+| `400` | `invalid_request` | A required form field is missing. | Send `grant_type` as a form field. |
+
+## Errors on the mock
+
+The [local mock](/portfolio/quickstart/) checks that each request matches the OpenAPI spec, but it doesn't run the API's business rules. When a request is invalid, the mock returns the operation's first error example from the spec, whatever the actual problem is: `422` with `validation-failed` for `POST /matches`, and `400` with `invalid-request` for read operations. It never returns errors that depend on data, such as `invalid-score` or `duplicate-match`.
+
+To see the example response for a specific status, add a `Prefer` header to the request, such as `Prefer: code=404`.
