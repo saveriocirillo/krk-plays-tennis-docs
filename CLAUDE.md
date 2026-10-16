@@ -10,6 +10,7 @@ A public docs portal for a fictional API, built as Saverio Cirillo's technical w
 
 - **The spec is the source of truth.** `openapi/krkplaystennis.v1.yaml` is written before any page that depends on it. If a page and the spec disagree, fix the spec first (in its own commit), then the page.
 - **Never hand-edit the API reference.** It's generated from the spec by `starlight-openapi`. Change the spec instead.
+- **Error types:** every problem `type` in the spec has a section on `errors.mdx`, as a level 3 heading written as code (`` ### `invalid-score` ``), so the anchor matches the URL. When you add a type to the spec, add its section in the same PR. `npm run check:errors` enforces this.
 - **Mock limits:** Prism returns the first matching example for a status code. Put the most generic example first, for example `validation-failed` before `invalid-score`.
 - **Every code sample must run** against the Prism mock. `scripts/test-samples.mjs` (phase 5) runs every `sh` block that starts with `curl`, every `js` block, and every `python` block in the pages.
 - **Fictional data only.** No real people, clubs, venues, or companies. No branding or content from Kong, Sabre, or Ververica.
@@ -29,6 +30,7 @@ npm run build     # production build into dist/
 npm run check     # Astro type and content checks
 npm run lint:spec # Spectral on the OpenAPI spec, fails on warnings
 npm run mock      # Prism mock of the spec at http://127.0.0.1:4010
+npm run check:errors # every problem type in the spec has a section on the errors page
 ```
 
 To check the Bruno collection, start the mock, then run `npx @usebruno/cli run -r --env mock` from `collections/bruno/`. Every request must pass. When you add or rename an operation, update the collection in the same PR.
@@ -51,12 +53,12 @@ src/content/docs/
 │   ├── api-key.mdx
 │   └── access-token.mdx
 ├── guides/
-│   ├── submit-a-match-result.md
-│   ├── explain-a-rating-change.md
-│   └── find-opponents.md
-├── concepts/how-ratings-work.md
-├── errors.md
-├── changelog.md
+│   ├── submit-a-match-result.mdx
+│   ├── explain-a-rating-change.mdx
+│   └── find-opponents.mdx
+├── concepts/how-ratings-work.mdx
+├── errors.mdx
+├── changelog.mdx
 └── agents/use-with-ai-agents.md
 ```
 
@@ -86,7 +88,7 @@ Elo with a confidence value. Keep explanations plain and the math reproducible b
 - **K-factor** is 48 when confidence is below 40, 32 from 40 to 69, and 16 from 70.
 - **Expected score** = `1 / (1 + 10^((opponent rating - player rating) / 400))`, rounded to 3 decimals.
 - **Actual score** is 1 for a win and 0 for a loss. For a retired match, it's the player's share of games won, rounded to 3 decimals. A completed match tiebreak counts as one game.
-- **Change** = `K * (actual - expected)`, rounded to the nearest integer. Each player uses their own K, so a match isn't zero-sum.
+- **Change** = `K * (actual - expected)`, computed from the rounded expected and actual scores, then rounded to the nearest integer. This way anyone can reproduce it from the `calculation` object. Each player uses their own K, so a match isn't zero-sum.
 - Walkovers aren't rated (`rating_status: not_rated`).
 
 ### Example dataset

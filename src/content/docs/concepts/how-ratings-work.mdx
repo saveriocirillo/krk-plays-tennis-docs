@@ -1,0 +1,106 @@
+---
+title: How ratings work
+description: How the KRKplaysTennis API turns a self-assessed level and real match results into a rating with a confidence value.
+---
+
+A KRKplaysTennis rating is a number, usually between 1000 and 1800 for amateur players, that predicts how a player does against other rated players. The rating starts from the player's own assessment, then each rated match moves it toward what the results show. A confidence value says how far you can trust the current number.
+
+The model is a variant of [Elo](https://en.wikipedia.org/wiki/Elo_rating_system), the system chess uses, with two changes: a confidence value that controls how fast the rating moves, and partial credit for matches that end in a retirement.
+
+## The starting rating
+
+A new player picks a level on the [NTRP self-rating scale](https://www.usta.com/en/home/coach-organize/tennis-tool-center/run-usta-programs/national/understanding-ntrp-ratings.html), from 1.5 to 5.5. The API converts it to a starting rating:
+
+```text
+starting rating = 1000 + (NTRP - 1.5) × 200
+```
+
+| NTRP | 1.5 | 2.0 | 2.5 | 3.0 | 3.5 | 4.0 | 4.5 | 5.0 | 5.5 |
+|---|---|---|---|---|---|---|---|---|---|
+| Starting rating | 1000 | 1100 | 1200 | 1300 | 1400 | 1500 | 1600 | 1700 | 1800 |
+
+Every new player starts with a confidence of 20, the lowest value. Self-assessments are often too optimistic or too modest, so the API treats the starting rating as a rough guess and lets the first results correct it quickly.
+
+The rating isn't an NTRP rating. NTRP only sets the starting point, and it never changes after that.
+
+## What happens after a match
+
+After each rated match, the API compares what happened with what the two ratings predicted.
+
+1. **Expected score.** The rating difference gives each player's chance of winning, from 0 to 1:
+
+   ```text
+   expected score = 1 / (1 + 10 ^ ((opponent rating - player rating) / 400))
+   ```
+
+   Equal ratings give 0.5. A player rated 120 points lower has an expected score of 0.334.
+
+2. **Actual score.** A win is 1 and a loss is 0.
+
+3. **Change.** The rating moves by the gap between the two, scaled by the K-factor:
+
+   ```text
+   change = K × (actual score - expected score)
+   ```
+
+   The API rounds the expected and actual scores to 3 decimal places, and the change to the nearest whole number. A player who wins against the odds gains a lot. A favorite who wins as expected gains little.
+
+## The K-factor and confidence
+
+The K-factor is the most a rating can move in one match. It depends on the player's confidence:
+
+| Confidence | K-factor | Meaning |
+|---|---|---|
+| 0 to 39 | 48 | The rating is still a guess. It moves fast. |
+| 40 to 69 | 32 | The rating is taking shape. |
+| 70 to 95 | 16 | The rating is settled. It moves slowly. |
+
+Confidence changes like this:
+
+- Each rated match adds 10, up to a maximum of 95. Confidence never reaches 100, because a rating is always an estimate.
+- After 60 days without a rated match, confidence drops by 5 every 30 days, down to 20. The rating itself doesn't change. A player who comes back after a break gets a higher K-factor, so the rating adapts quickly to their current form.
+
+Each player uses their own K-factor. A match between a new player and a settled one changes the two ratings by different amounts, so the system isn't zero-sum.
+
+## Worked example: a completed match
+
+Ola K. and Kasia W. play in the Kraków Autumn League. Ola has a self-assessed NTRP level of 3.5 and no rated matches yet. Kasia has played 4 rated matches. Ola wins 6-4 3-6 [10-7].
+
+| | Ola K. | Kasia W. |
+|---|---|---|
+| Rating before | 1400 | 1520 |
+| Confidence before | 20 | 60 |
+| K-factor | 48 | 32 |
+| Expected score | 0.334 | 0.666 |
+| Actual score | 1 (win) | 0 (loss) |
+| Change | 48 × (1 - 0.334) = **+32** | 32 × (0 - 0.666) = **-21** |
+| Rating after | **1432** | **1499** |
+| Confidence after | 30 | 70 |
+
+Ola was the underdog and won, so Ola gains more than Kasia loses. Ola's K-factor is also higher, because one match says more about a new rating than about a settled one. These are the numbers you get from the API in the [quickstart](/portfolio/quickstart/).
+
+## Worked example: a retired match
+
+Tomek B. and Marta Z. are both new, with confidence 20. Marta retires injured at 6-2 2-1 for Tomek. Tomek won 8 of the 11 games played.
+
+For a retired match, the actual score is each player's share of the games played, not 1 or 0. This way, a result that stops early still counts, but only for what the players showed on court.
+
+| | Tomek B. | Marta Z. |
+|---|---|---|
+| Rating before | 1300 | 1400 |
+| K-factor | 48 | 48 |
+| Expected score | 0.360 | 0.640 |
+| Actual score | 8 / 11 = 0.727 | 3 / 11 = 0.273 |
+| Change | 48 × (0.727 - 0.360) = **+18** | 48 × (0.273 - 0.640) = **-18** |
+| Rating after | **1318** | **1382** |
+
+In a match tiebreak format, a completed match tiebreak counts as one game for its winner.
+
+## Matches that don't change ratings
+
+- **Walkovers.** When a player doesn't show up or withdraws before the match, nothing was played, so there's nothing to rate. The match gets `rating_status: not_rated`, and neither rating nor confidence changes.
+- **Matches waiting to be rated.** The API rates matches a few minutes after they're submitted. Until then, the match has `rating_status: pending`.
+
+## See every change for yourself
+
+Every change to a rating is recorded in the player's rating history, with the reason and, for matches, every number used in the calculation. To reproduce a change from the API data, follow [Explain a rating change](/portfolio/guides/explain-a-rating-change/).

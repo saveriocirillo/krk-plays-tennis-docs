@@ -1,0 +1,183 @@
+---
+title: Explain a rating change
+description: Read a player's rating history, find the change caused by a match, and reproduce the calculation from the API data.
+sidebar:
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+When a player asks "why did my rating go up by 32?", the rating history has the answer. Each entry records what changed, why, and, for a match, every number used in the calculation. You can show players the explanation, or reproduce the change yourself to check it.
+
+This guide explains the change to the rating of Ola K. (`plr_2b7xq9mhk4`) after a win against Kasia W. To learn the model behind the numbers, see [How ratings work](/portfolio/concepts/how-ratings-work/).
+
+## Before you begin
+
+- An API key in `KRK_API_KEY`. See [Authenticate with an API key](/portfolio/authentication/api-key/).
+- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+
+## Steps
+
+1. List the player's rating history:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players/plr_2b7xq9mhk4/rating-history" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `rating-history.mjs`, then run `node rating-history.mjs`:
+
+   ```js
+   const response = await fetch(
+     `${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4/rating-history`,
+     { headers: { 'X-API-Key': process.env.KRK_API_KEY } },
+   );
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const { data } = await response.json();
+   for (const entry of data) {
+     console.log(entry.occurred_at, entry.reason.code, entry.change);
+   }
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `rating_history.py`, then run `python3 rating_history.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/plr_2b7xq9mhk4/rating-history",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   for entry in response.json()["data"]:
+       print(entry["occurred_at"], entry["reason"]["code"], entry["change"])
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The history has two entries, newest first:
+
+   - A `match_result` entry with a `change` of `32`.
+   - An `initial_assessment` entry with a `change` of `null`. It records the starting rating of 1400, from a self-assessed NTRP level of 3.5.
+
+2. Find the entry for the match. Its `reason.match_id` is the match, and its `calculation` object has the inputs:
+
+   ```json
+   {
+     "reason": {
+       "code": "match_result",
+       "match_id": "mat_4nc8xq2vbt",
+       "explanation": "Won against Kasia W. (1520). Expected score 0.334, actual score 1. K-factor 48 because confidence was 20."
+     },
+     "value_before": 1400,
+     "value_after": 1432,
+     "change": 32,
+     "confidence_before": 20,
+     "confidence_after": 30,
+     "calculation": {
+       "opponent_id": "plr_9fz3tr6wn1",
+       "opponent_rating": 1520,
+       "expected_score": 0.334,
+       "actual_score": 1,
+       "k_factor": 48
+     }
+   }
+   ```
+
+   `calculation` is `null` for entries that don't come from a match, such as `initial_assessment` and `inactivity`.
+
+3. Reproduce the change from the entry. Compute the expected score from the two ratings, then the change from the K-factor. This step needs code, so there's no curl example:
+
+   <Tabs syncKey="lang">
+   <TabItem label="JavaScript">
+
+   Save this code as `explain-change.mjs`, then run `node explain-change.mjs`:
+
+   ```js
+   const response = await fetch(
+     `${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4/rating-history`,
+     { headers: { 'X-API-Key': process.env.KRK_API_KEY } },
+   );
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   const { data } = await response.json();
+   const entry = data.find((e) => e.reason.match_id === 'mat_4nc8xq2vbt');
+   const { opponent_rating, actual_score, k_factor } = entry.calculation;
+
+   const round3 = (x) => Math.round(x * 1000) / 1000;
+   const expected = round3(1 / (1 + 10 ** ((opponent_rating - entry.value_before) / 400)));
+   const change = Math.round(k_factor * (actual_score - expected));
+
+   console.log(`expected score: ${expected}`);
+   console.log(`change: ${change}, from the API: ${entry.change}`);
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `explain_change.py`, then run `python3 explain_change.py`:
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/plr_2b7xq9mhk4/rating-history",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   entry = next(
+       e for e in response.json()["data"] if e["reason"]["match_id"] == "mat_4nc8xq2vbt"
+   )
+   calc = entry["calculation"]
+
+   expected = round(1 / (1 + 10 ** ((calc["opponent_rating"] - entry["value_before"]) / 400)), 3)
+   change = round(calc["k_factor"] * (calc["actual_score"] - expected))
+
+   print(f"expected score: {expected}")
+   print(f"change: {change}, from the API: {entry['change']}")
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The output shows that your calculation matches the API:
+
+   ```text
+   expected score: 0.334
+   change: 32, from the API: 32
+   ```
+
+   Ola was rated 120 points lower than Kasia, so Ola's chance of winning was 0.334. Ola won, so the actual score is 1, and the change is 48 × (1 - 0.334) = 31.968, which rounds to 32. The K-factor is 48 because Ola's confidence was 20, under 40.
+
+4. Show the player the explanation. Each entry has a `reason.explanation` sentence, written for players:
+
+   ```text
+   Won against Kasia W. (1520). Expected score 0.334, actual score 1. K-factor 48 because confidence was 20.
+   ```
+
+   Display it next to the change, for example "+32: Won against Kasia W. (1520)…". For the full model, link players to [How ratings work](/portfolio/concepts/how-ratings-work/).
+
+## Other reasons for a change
+
+| `reason.code` | What changed | `calculation` |
+|---|---|---|
+| `initial_assessment` | The starting rating, from the self-assessed NTRP level. `value_before`, `change`, and `confidence_before` are `null`. | `null` |
+| `match_result` | The rating and confidence, after a rated match. | The inputs to the calculation |
+| `inactivity` | Only confidence, which drops by 5 after a period without rated matches. The rating value stays the same, so `change` is `0`. | `null` |
