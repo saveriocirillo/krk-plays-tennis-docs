@@ -62,6 +62,8 @@ jobs:
         run: npm run check
       - name: Build the site
         run: npm run build
+      - name: Check the Markdown version of every page
+        run: npm run check:markdown
 
   links:
     name: Links (lychee)
@@ -104,6 +106,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            mcp-server/package-lock.json
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.10'
@@ -123,3 +128,9 @@ jobs:
       - name: Run the Bruno collection
         working-directory: collections/bruno
         run: npx --yes @usebruno/cli@4.2.1 run -r --env mock
+      - name: Build and test the MCP server
+        working-directory: mcp-server
+        run: |
+          npm ci
+          npm run build
+          npm test

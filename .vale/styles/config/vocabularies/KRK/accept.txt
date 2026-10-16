@@ -19,3 +19,5 @@ Tomek
 (?i)walkovers?
 Warsaw
 WSL
+MCP
+Claude

@@ -1,0 +1,10 @@
+---
+// Adds a link to the Markdown version of the page, so agents can find it from the HTML.
+import Default from '@astrojs/starlight/components/Head.astro';
+import { markdownUrl } from '../lib/markdown-url';
+
+const url = markdownUrl(Astro.locals.starlightRoute.entry.id, import.meta.env.BASE_URL);
+---
+
+<Default />
+{url && <link rel="alternate" type="text/markdown" href={url} />}
