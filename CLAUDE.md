@@ -26,9 +26,10 @@ A public docs portal for a fictional API, built as Saverio Cirillo's technical w
 npm run dev       # local site at http://localhost:4321/portfolio/
 npm run build     # production build into dist/
 npm run check     # Astro type and content checks
+npm run lint:spec # Spectral on the OpenAPI spec, fails on warnings
 ```
 
-Linting (Vale, Spectral, lychee) and sample tests arrive in phase 5. Add their commands here when they land.
+Run `npm run lint:spec` after every spec change. It also validates every example against its schema. Vale, lychee, and sample tests arrive in phase 5. Add their commands here when they land.
 
 ## Site configuration
 
@@ -70,15 +71,32 @@ The API reference is generated under `/reference/`. Add sidebar entries in `astr
 
 ## Rating model
 
-Elo with a confidence value. Keep explanations plain and the math reproducible by hand.
+Elo with a confidence value. Keep explanations plain and the math reproducible by hand. The spec, the concept page, and every example must use these exact constants.
 
-- The starting rating comes from the self-assessed level, with low confidence.
-- After each rated match, the rating changes by K × (actual score − expected score). Expected score = 1 / (1 + 10^((opponent rating − player rating) / 400)).
-- K is large when confidence is low and shrinks as confidence grows.
-- Confidence rises with each rated match and decays slowly with inactivity.
-- Walkovers aren't rated. Retired matches are rated on the games completed.
+- **Starting rating** comes from the self-assessed NTRP level (`self_assessed_ntrp`, 1.5 to 5.5 in steps of 0.5): `1000 + (NTRP - 1.5) * 200`. NTRP is only an input scale. Never call the computed rating an NTRP rating.
+- **Confidence** is an integer from 0 to 100. It starts at 20, rises by 10 per rated match up to 95, and after 60 days without a rated match drops by 5 every 30 days, down to 20. Inactivity never changes the rating value.
+- **K-factor** is 48 when confidence is below 40, 32 from 40 to 69, and 16 from 70.
+- **Expected score** = `1 / (1 + 10^((opponent rating - player rating) / 400))`, rounded to 3 decimals.
+- **Actual score** is 1 for a win and 0 for a loss. For a retired match, it's the player's share of games won, rounded to 3 decimals. A completed match tiebreak counts as one game.
+- **Change** = `K * (actual - expected)`, rounded to the nearest integer. Each player uses their own K, so a match isn't zero-sum.
+- Walkovers aren't rated (`rating_status: not_rated`).
 
-The exact constants are defined in phase 1. Once set, the spec, the concept page, and the worked example must all use the same numbers.
+### Example dataset
+
+All examples share one fictional dataset. Reuse these IDs and numbers instead of inventing new ones.
+
+| Player | ID | NTRP | Rating before | Rating now |
+|---|---|---|---|---|
+| Ola K. | `plr_2b7xq9mhk4` | 3.5 | 1400, confidence 20 | 1432, confidence 30 |
+| Kasia W. | `plr_9fz3tr6wn1` | 4.0 | 1520, confidence 60 | 1499, confidence 70 |
+| Tomek B. | `plr_5jd8vk2lc7` | 3.0 | 1300, confidence 20 | 1318, confidence 30 |
+| Marta Z. | `plr_8mq4ws1yd6` | 3.5 | 1400, confidence 20 | 1382, confidence 30 |
+
+- `mat_4nc8xq2vbt`: Ola beats Kasia 6-4 3-6 [10-7]. Ola +32 (expected 0.334, K 48), Kasia -21 (expected 0.666, K 32).
+- `mat_7rk3mw9zse`: Marta retires against Tomek at 6-2 2-1. Tomek wins 8 of 11 games: actual 0.727, expected 0.360, +18. Marta -18.
+- `mat_2vb6np4ktf`: Kasia wins a walkover against Tomek. Not rated.
+- Competitions: `cmp_6tw2hn8rxe` Kraków Autumn League 2026 (league, `best_of_3_match_tiebreak`), `cmp_1qv7mz3kpd` Nowa Huta Indoor Open 2026 (tournament, `best_of_3`).
+- Venues: `ven_7hk2p9wq4m` Riverside Courts Podgórze, `ven_3xr8tn5cva` Nowa Huta Indoor Tennis Hall.
 
 ## Style rules
 
