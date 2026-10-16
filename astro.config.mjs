@@ -7,6 +7,9 @@ export default defineConfig({
 	site: 'https://saverio-cirillo.com',
 	base: '/portfolio',
 	trailingSlash: 'always',
+	// Mirror the base path on disk so Vercel serves /portfolio/ as static files,
+	// with directory indexes, and needs no rewrites.
+	outDir: './dist/portfolio',
 	integrations: [
 		starlight({
 			title: 'KRKplaysTennis API',
