@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "astro",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "trailingSlash": true,
+  "redirects": [
+    { "source": "/", "destination": "/portfolio/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/portfolio/:path*", "destination": "/:path*" }
+  ]
+}

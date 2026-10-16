@@ -1,0 +1,25 @@
+/*
+ * Theme aligned with saverio-cirillo.com: Starlight default fonts and accent,
+ * a slightly darker light-mode nav, and the same blue scale for card accents.
+ */
+:root {
+  --krk-blue-1: #1d4ed8;
+  --krk-blue-2: #2563eb;
+  --krk-blue-3: #3b82f6;
+  --krk-blue-4: #60a5fa;
+}
+
+/* Slightly darker nav background in light mode for contrast */
+[data-theme='light'] {
+  --sl-color-bg-nav: #f4f4f5;
+}
+
+/* Blue tone accents for link and feature cards */
+.sl-link-card:nth-child(4n + 1),
+.card:nth-child(4n + 1) { border-top: 2px solid var(--krk-blue-1); }
+.sl-link-card:nth-child(4n + 2),
+.card:nth-child(4n + 2) { border-top: 2px solid var(--krk-blue-2); }
+.sl-link-card:nth-child(4n + 3),
+.card:nth-child(4n + 3) { border-top: 2px solid var(--krk-blue-3); }
+.sl-link-card:nth-child(4n + 4),
+.card:nth-child(4n + 4) { border-top: 2px solid var(--krk-blue-4); }
