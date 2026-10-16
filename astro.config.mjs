@@ -52,8 +52,12 @@ export default defineConfig({
 			editLink: {
 				baseUrl: 'https://github.com/saveriocirillo/krk-plays-tennis-docs/edit/main/',
 			},
-			// Sections are added as each phase lands. See CLAUDE.md for the planned structure.
-			sidebar: [{ label: 'Overview', link: '/' }, ...openAPISidebarGroups],
+			sidebar: [
+				{ label: 'Overview', link: '/' },
+				{ label: 'Get started', items: ['quickstart'] },
+				{ label: 'Authentication', items: [{ autogenerate: { directory: 'authentication' } }] },
+				...openAPISidebarGroups,
+			],
 		}),
 	],
 });

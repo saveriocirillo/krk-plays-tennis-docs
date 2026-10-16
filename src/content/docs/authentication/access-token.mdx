@@ -1,0 +1,208 @@
+---
+title: Get an access token
+description: Exchange your client credentials for an OAuth 2.0 access token, then use it to submit match results.
+sidebar:
+  label: Access token
+  order: 2
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+To submit match results with `POST /matches`, you need an OAuth 2.0 access token with the `matches:write` scope. You get the token from the authorization server with the client credentials grant, then send it in the `Authorization` header.
+
+Only competition organizers get client credentials, and a token can only submit results for competitions its organizer runs. To read data, use an [API key](/portfolio/authentication/api-key/) instead.
+
+## Before you begin
+
+- A client ID and a client secret for your organizer account. With the [local mock](/portfolio/quickstart/), any non-empty values work.
+- `KRK_API_URL` set to the API base URL. For the mock, that's `http://127.0.0.1:4010`.
+
+## Steps
+
+1. Store the authorization server URL and your client credentials in environment variables:
+
+   ```sh
+   export KRK_AUTH_URL=http://127.0.0.1:4010
+   export KRK_CLIENT_ID=your-client-id
+   export KRK_CLIENT_SECRET=your-client-secret
+   ```
+
+   For the mock, the authorization server runs at the same address as the API. In production, `KRK_AUTH_URL` is `https://auth.krkplaystennis.example`.
+
+   To check the variables, run `echo $KRK_AUTH_URL`. The output is the URL you set.
+
+2. Request a token. Send your client ID and client secret with HTTP Basic authentication, and the grant type and scope as form fields:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_AUTH_URL/oauth/token" \
+     --user "$KRK_CLIENT_ID:$KRK_CLIENT_SECRET" \
+     --data grant_type=client_credentials \
+     --data scope=matches:write
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   ```js
+   const credentials = Buffer.from(
+     `${process.env.KRK_CLIENT_ID}:${process.env.KRK_CLIENT_SECRET}`,
+   ).toString('base64');
+
+   const response = await fetch(`${process.env.KRK_AUTH_URL}/oauth/token`, {
+     method: 'POST',
+     headers: { Authorization: `Basic ${credentials}` },
+     body: new URLSearchParams({ grant_type: 'client_credentials', scope: 'matches:write' }),
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   console.log(await response.json());
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.post(
+       f"{os.environ['KRK_AUTH_URL']}/oauth/token",
+       auth=(os.environ["KRK_CLIENT_ID"], os.environ["KRK_CLIENT_SECRET"]),
+       data={"grant_type": "client_credentials", "scope": "matches:write"},
+   )
+   response.raise_for_status()
+
+   print(response.json())
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response has status `200` and contains the token:
+
+   ```json
+   {
+     "access_token": "eyJhbGciOiJSUzI1NiJ9.fictional-token-for-docs.c2lnbmF0dXJl",
+     "token_type": "Bearer",
+     "expires_in": 3600,
+     "scope": "matches:write"
+   }
+   ```
+
+3. Store the `access_token` value in an environment variable:
+
+   ```sh
+   export KRK_ACCESS_TOKEN=eyJhbGciOiJSUzI1NiJ9.fictional-token-for-docs.c2lnbmF0dXJl
+   ```
+
+   To check it, run `echo $KRK_ACCESS_TOKEN`. The output is the token.
+
+4. Send the token as `Authorization: Bearer <token>` to submit a match result. Each new result also needs a unique `Idempotency-Key`:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/matches" \
+     --header "Authorization: Bearer $KRK_ACCESS_TOKEN" \
+     --header "Idempotency-Key: $(uuidgen)" \
+     --header "Content-Type: application/json" \
+     --data '{
+       "competition_id": "cmp_6tw2hn8rxe",
+       "venue_id": "ven_7hk2p9wq4m",
+       "played_at": "2026-10-10T18:00:00+02:00",
+       "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+       "status": "completed",
+       "score": {
+         "sets": [{ "games": [6, 4] }, { "games": [3, 6] }],
+         "match_tiebreak": [10, 7]
+       }
+     }'
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/matches`, {
+     method: 'POST',
+     headers: {
+       Authorization: `Bearer ${process.env.KRK_ACCESS_TOKEN}`,
+       'Idempotency-Key': crypto.randomUUID(),
+       'Content-Type': 'application/json',
+     },
+     body: JSON.stringify({
+       competition_id: 'cmp_6tw2hn8rxe',
+       venue_id: 'ven_7hk2p9wq4m',
+       played_at: '2026-10-10T18:00:00+02:00',
+       player_ids: ['plr_2b7xq9mhk4', 'plr_9fz3tr6wn1'],
+       status: 'completed',
+       score: {
+         sets: [{ games: [6, 4] }, { games: [3, 6] }],
+         match_tiebreak: [10, 7],
+       },
+     }),
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   console.log(await response.json());
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   ```python
+   import os
+   import uuid
+
+   import requests
+
+   response = requests.post(
+       f"{os.environ['KRK_API_URL']}/matches",
+       headers={
+           "Authorization": f"Bearer {os.environ['KRK_ACCESS_TOKEN']}",
+           "Idempotency-Key": str(uuid.uuid4()),
+       },
+       json={
+           "competition_id": "cmp_6tw2hn8rxe",
+           "venue_id": "ven_7hk2p9wq4m",
+           "played_at": "2026-10-10T18:00:00+02:00",
+           "player_ids": ["plr_2b7xq9mhk4", "plr_9fz3tr6wn1"],
+           "status": "completed",
+           "score": {
+               "sets": [{"games": [6, 4]}, {"games": [3, 6]}],
+               "match_tiebreak": [10, 7],
+           },
+       },
+   )
+   response.raise_for_status()
+
+   print(response.json())
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response has status `201` and the new match, with `"rating_status": "pending"`. The API rates the match a few minutes later.
+
+## Renew the token
+
+A token expires `expires_in` seconds after you get it, which is 1 hour. There's no refresh token. When a token expires, the API returns status `401`, and you request a new token with the same client credentials.
+
+To avoid failed requests, keep the token and its expiry time in memory, and request a new token a minute before it expires.
+
+## If the request fails
+
+| Status | `error` or `type` | Cause | Fix |
+|---|---|---|---|
+| `401` from `/oauth/token` | `invalid_client` | The client ID or client secret is wrong. | Check both values. Don't send the client secret as a form field: use HTTP Basic. |
+| `400` from `/oauth/token` | `invalid_scope` | The scope doesn't exist. | Request `matches:write`, the only scope. |
+| `401` from `/matches` | `unauthenticated` | The token is missing or expired. | Request a new token. |
+| `403` from `/matches` | `insufficient-scope` | The token doesn't have the `matches:write` scope. | Request a token with `scope=matches:write`. |
+| `403` from `/matches` | `not-competition-organizer` | Another organizer runs the competition. | Submit results only for your own competitions. |
+
+The token endpoint follows the OAuth 2.0 standard ([RFC 6749](https://www.rfc-editor.org/rfc/rfc6749#section-5.2)), so its errors have an `error` field. The rest of the API uses problem details, with a `type` field.

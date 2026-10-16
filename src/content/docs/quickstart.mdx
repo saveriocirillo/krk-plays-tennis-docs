@@ -1,0 +1,179 @@
+---
+title: Make your first request
+description: Start a local mock of the KRKplaysTennis API and read a player's rating in under 5 minutes.
+sidebar:
+  label: Quickstart
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+In this quickstart, you start a local mock of the KRKplaysTennis API, list players, and read one player's rating. It takes less than 5 minutes.
+
+KRKplaysTennis is fictional, so there's no live server. The mock is [Prism](https://github.com/stoplightio/prism): it reads the API's OpenAPI spec and answers each request with the examples in it.
+
+## Before you begin
+
+- [Node.js](https://nodejs.org/) 22 or later. You need it to run the mock, and for the JavaScript examples.
+- A macOS or Linux terminal. On Windows, use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+- For the Python examples: Python 3.9 or later, with the `requests` package (`pip install requests`).
+
+## Steps
+
+1. Start the mock:
+
+   ```sh
+   npx @stoplight/prism-cli@5 mock https://saverio-cirillo.com/portfolio/openapi.yaml
+   ```
+
+   The first run downloads Prism, which takes a few seconds. When the mock is ready, the last line of the output is:
+
+   ```text
+   Prism is listening on http://127.0.0.1:4010
+   ```
+
+   Keep this terminal open.
+
+2. In a new terminal, set the base URL and an API key:
+
+   ```sh
+   export KRK_API_URL=http://127.0.0.1:4010
+   export KRK_API_KEY=quickstart-key
+   ```
+
+   The mock accepts any API key, as long as you send one. Every example in these docs reads these two variables, so the same code works with the mock and with a real key.
+
+   To check the variables, run `echo $KRK_API_URL`. The output is `http://127.0.0.1:4010`.
+
+3. List the players:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `list-players.mjs`, then run `node list-players.mjs`:
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/players`, {
+     headers: { 'X-API-Key': process.env.KRK_API_KEY },
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   console.log(JSON.stringify(await response.json(), null, 2));
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `list_players.py`, then run `python3 list_players.py`:
+
+   ```python
+   import json
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print(json.dumps(response.json(), indent=2))
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response lists three players: Kasia W., Marta Z., and Ola K. Each player has a `rating` with a `value` and a `confidence`. `next_cursor` is `null`, because there are no more pages. The start of the response looks like this:
+
+   ```json
+   {
+     "data": [
+       {
+         "id": "plr_9fz3tr6wn1",
+         "display_name": "Kasia W.",
+         "self_assessed_ntrp": 4,
+         "rating": { "value": 1499, "confidence": 70 },
+   ```
+
+4. Get the rating of Ola K., whose player ID is `plr_2b7xq9mhk4`:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players/plr_2b7xq9mhk4/rating" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   Save this code as `get-rating.mjs`, then run `node get-rating.mjs`:
+
+   ```js
+   const playerId = 'plr_2b7xq9mhk4';
+
+   const response = await fetch(`${process.env.KRK_API_URL}/players/${playerId}/rating`, {
+     headers: { 'X-API-Key': process.env.KRK_API_KEY },
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   console.log(JSON.stringify(await response.json(), null, 2));
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   Save this code as `get_rating.py`, then run `python3 get_rating.py`:
+
+   ```python
+   import json
+   import os
+
+   import requests
+
+   player_id = "plr_2b7xq9mhk4"
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/{player_id}/rating",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print(json.dumps(response.json(), indent=2))
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response shows Ola's rating after one rated match:
+
+   ```json
+   {
+     "player_id": "plr_2b7xq9mhk4",
+     "value": 1432,
+     "confidence": 30,
+     "k_factor": 48,
+     "rated_matches": 1,
+     "last_rated_match_at": "2026-10-10T18:00:00+02:00",
+     "updated_at": "2026-10-10T20:43:12Z"
+   }
+   ```
+
+   Ola started at 1400, from a self-assessed NTRP level of 3.5. Winning that first match raised the rating by 32 and the confidence from 20 to 30.
+
+You've made your first two requests to the KRKplaysTennis API.
+
+## Next steps
+
+- [Authenticate with an API key](/portfolio/authentication/api-key/): how API keys work, and how to keep yours out of your code.
+- [Get an access token](/portfolio/authentication/access-token/): the credential you need to submit match results.
+- [API reference](/portfolio/reference/): every operation, with its parameters and responses.

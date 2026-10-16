@@ -1,0 +1,29 @@
+meta {
+  name: Get an access token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{authUrl}}/oauth/token
+  body: formUrlEncoded
+  auth: basic
+}
+
+auth:basic {
+  username: {{clientId}}
+  password: {{clientSecret}}
+}
+
+body:form-urlencoded {
+  grant_type: client_credentials
+  scope: matches:write
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/getaccesstoken/
+}
