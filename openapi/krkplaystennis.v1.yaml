@@ -621,7 +621,7 @@ paths:
                     instance: /v1/matches
                     errors:
                       - pointer: /score/sets/0/games
-                        detail: A set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score.
+                        detail: In this competition, a set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score.
                 validationFailed:
                   summary: Same player on both sides
                   value:
@@ -715,7 +715,10 @@ paths:
                         season: 2026-winter
                         starts_on: '2026-12-05'
                         ends_on: '2026-12-07'
-                        match_format: best_of_3
+                        match_format:
+                          games_per_set: 4
+                          no_ad: true
+                          final_set: match_tiebreak
                         venue_ids: [ven_3xr8tn5cva]
                       - id: cmp_6tw2hn8rxe
                         name: Kraków Autumn League 2026
@@ -726,7 +729,10 @@ paths:
                         season: 2026-autumn
                         starts_on: '2026-09-01'
                         ends_on: '2026-11-30'
-                        match_format: best_of_3_match_tiebreak
+                        match_format:
+                          games_per_set: 6
+                          no_ad: false
+                          final_set: match_tiebreak
                         venue_ids: [ven_7hk2p9wq4m, ven_3xr8tn5cva]
                     next_cursor: null
         '400':
@@ -1309,7 +1315,7 @@ components:
       description: |
         The score, set by set. Every pair of numbers is in the same order as `player_ids`.
 
-        A set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. In the `best_of_3_match_tiebreak` format, a match tiebreak to 10 points, with a 2-point lead, replaces the third set. In a retired match, the last set can be unfinished.
+        Valid set scores depend on the competition's `match_format.games_per_set`. When `match_format.final_set` is `match_tiebreak`, a match tiebreak replaces the third set. In a retired match, the last set can be unfinished.
       required: [sets]
       properties:
         sets:
@@ -1319,7 +1325,7 @@ components:
           items:
             $ref: '#/components/schemas/Set'
         match_tiebreak:
-          description: Match tiebreak points, only in the `best_of_3_match_tiebreak` format.
+          description: Match tiebreak points, only when the competition's `match_format.final_set` is `match_tiebreak`.
           $ref: '#/components/schemas/GamePair'
           examples: [[10, 7]]
 
@@ -1459,13 +1465,35 @@ components:
       description: '`league` for a season-long round robin, `tournament` for a knockout event over a few days.'
       enum: [league, tournament]
     MatchFormat:
-      type: string
+      type: object
       description: |
-        The match format for every match in the competition:
+        The scoring rules for every match in the competition. All matches are best of three sets.
 
-        - `best_of_3`: best of three sets.
-        - `best_of_3_match_tiebreak`: best of three sets, with a match tiebreak to 10 points instead of a third set.
-      enum: [best_of_3, best_of_3_match_tiebreak]
+        Each field is one rule, so new formats need new fields, not new enum values.
+      required: [games_per_set, no_ad, final_set]
+      properties:
+        games_per_set:
+          type: integer
+          description: |
+            Games needed to win a set.
+
+            - `6`: a set ends at 6 games with a 2-game lead or at 7-5. At 6-6, a tiebreak decides the set, which ends 7-6.
+            - `4`: short sets. A set ends at 4 games with a 2-game lead or at 5-3. At 4-4, a tiebreak decides the set, which ends 5-4.
+          enum: [4, 6]
+          examples: [6]
+        no_ad:
+          type: boolean
+          description: '`true` when a game at deuce is decided by a single point. The API records games, not points, so this rule doesn''t affect score validation or ratings.'
+          examples: [false]
+        final_set:
+          type: string
+          description: |
+            How the match is decided at one set all:
+
+            - `full_set`: a normal third set.
+            - `match_tiebreak`: a tiebreak to 10 points, with a 2-point lead, instead of a third set.
+          enum: [full_set, match_tiebreak]
+          examples: [match_tiebreak]
     Competition:
       type: object
       required: [id, name, type, organizer, season, starts_on, ends_on, match_format, venue_ids]
@@ -1681,7 +1709,10 @@ components:
         season: 2026-autumn
         starts_on: '2026-09-01'
         ends_on: '2026-11-30'
-        match_format: best_of_3_match_tiebreak
+        match_format:
+          games_per_set: 6
+          no_ad: false
+          final_set: match_tiebreak
         venue_ids: [ven_7hk2p9wq4m, ven_3xr8tn5cva]
     CompetitionTournament:
       summary: Tournament
@@ -1695,7 +1726,10 @@ components:
         season: 2026-winter
         starts_on: '2026-12-05'
         ends_on: '2026-12-07'
-        match_format: best_of_3
+        match_format:
+          games_per_set: 4
+          no_ad: true
+          final_set: match_tiebreak
         venue_ids: [ven_3xr8tn5cva]
     VenuePodgorze:
       summary: Outdoor clay club with one covered court
