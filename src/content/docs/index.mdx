@@ -1,12 +1,54 @@
 ---
 title: KRKplaysTennis API
-description: Developer documentation for the KRKplaysTennis API, a fictional API that rates amateur tennis players in Kraków from real match results.
+description: The KRKplaysTennis API rates amateur tennis players in Kraków from the results of the matches they play.
 ---
 
-The KRKplaysTennis API collects match results from amateur tennis leagues and tournaments in Kraków and gives each player a rating based on those results. A player's self-assessed level sets the starting point. Each rated match moves the rating, and a confidence value shows how settled it is.
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-KRKplaysTennis is a fictional API. The players, clubs, and competitions in these docs are invented.
+The KRKplaysTennis API rates amateur tennis players in Kraków from the results of league and tournament matches. Use it to show players their rating, explain why it changed, suggest fair opponents, or submit results for a competition you run.
 
-:::note[Work in progress]
-This portal is built in public, one reviewed pull request at a time. Follow the progress in the [GitHub repository](https://github.com/saveriocirillo/krk-plays-tennis-docs).
+:::note[A fictional API]
+KRKplaysTennis is a fictional API, built as a technical writing portfolio. The players, venues, and competitions are invented. You can run every example in these docs against a local mock server.
 :::
+
+## How ratings work
+
+- A new player picks a starting level on the [NTRP self-rating scale](https://www.usta.com/en/home/coach-organize/tennis-tool-center/run-usta-programs/national/understanding-ntrp-ratings.html), from 1.5 to 5.5. The API converts it to a starting rating between 1000 and 1800.
+- Each rated match moves the rating up or down, based on the result and on the opponent's rating.
+- A confidence value from 0 to 100 shows how settled the rating is. A new rating moves quickly, and a settled rating moves slowly.
+
+The rating comes from results, not from the self-assessment. The self-assessed level is only the starting point.
+
+## What you can do
+
+| Task | Operations |
+|---|---|
+| Read player profiles and ratings | [List players](/portfolio/reference/operations/listplayers/), [Get a player's rating](/portfolio/reference/operations/getplayerrating/) |
+| See why a rating changed | [List a player's rating history](/portfolio/reference/operations/listplayerratinghistory/) |
+| Find opponents for a player | [List match suggestions](/portfolio/reference/operations/listmatchsuggestions/) |
+| Browse competitions, venues, and results | [List competitions](/portfolio/reference/operations/listcompetitions/), [List venues](/portfolio/reference/operations/listvenues/), [List matches](/portfolio/reference/operations/listmatches/) |
+| Submit a match result, as a competition organizer | [Submit a match result](/portfolio/reference/operations/creatematch/) |
+
+## Which credential you need
+
+| To | You need | Guide |
+|---|---|---|
+| Read any data | An API key | [Authenticate with an API key](/portfolio/authentication/api-key/) |
+| Submit match results | An OAuth access token with the `matches:write` scope | [Get an access token](/portfolio/authentication/access-token/) |
+
+## Conventions
+
+- **Base URL:** `https://api.krkplaystennis.example/v1`
+- **Format:** JSON requests and responses.
+- **Pagination:** list operations return `data` and a `next_cursor`. Pass `next_cursor` as `cursor` to get the next page.
+- **Errors:** [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details, with a `type` URL for each kind of error.
+- **Times:** RFC 3339 timestamps. Availability windows use local time in Kraków (`Europe/Warsaw`).
+
+## Next steps
+
+<CardGrid>
+	<LinkCard title="Quickstart" description="Start the mock and make your first request in under 5 minutes." href="/portfolio/quickstart/" />
+	<LinkCard title="Authenticate with an API key" description="Send your API key with every read request." href="/portfolio/authentication/api-key/" />
+	<LinkCard title="Get an access token" description="Get a token to submit match results." href="/portfolio/authentication/access-token/" />
+	<LinkCard title="API reference" description="Every operation, parameter, and schema, generated from the OpenAPI spec." href="/portfolio/reference/" />
+</CardGrid>

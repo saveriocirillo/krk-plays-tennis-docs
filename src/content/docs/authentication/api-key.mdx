@@ -1,0 +1,94 @@
+---
+title: Authenticate with an API key
+description: Send an API key in the X-API-Key header to read data from the KRKplaysTennis API.
+sidebar:
+  label: API key
+  order: 1
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+Every read operation in the KRKplaysTennis API needs an API key. You send the key in the `X-API-Key` header of each request.
+
+An API key can only read data. To submit match results, you need an access token instead. See [Get an access token](/portfolio/authentication/access-token/).
+
+## Before you begin
+
+- An API key. With the [local mock](/portfolio/quickstart/), any non-empty value works.
+- `KRK_API_URL` set to the API base URL. For the mock, that's `http://127.0.0.1:4010`.
+
+## Steps
+
+1. Store the key in an environment variable, so it stays out of your code:
+
+   ```sh
+   export KRK_API_KEY=your-api-key
+   ```
+
+   To check it, run `echo $KRK_API_KEY`. The output is your key.
+
+2. Send the key in the `X-API-Key` header. This request gets a player's profile:
+
+   <Tabs syncKey="lang">
+   <TabItem label="curl">
+
+   ```sh
+   curl --silent "$KRK_API_URL/players/plr_2b7xq9mhk4" \
+     --header "X-API-Key: $KRK_API_KEY"
+   ```
+
+   </TabItem>
+   <TabItem label="JavaScript">
+
+   ```js
+   const response = await fetch(`${process.env.KRK_API_URL}/players/plr_2b7xq9mhk4`, {
+     headers: { 'X-API-Key': process.env.KRK_API_KEY },
+   });
+   if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+
+   console.log(await response.json());
+   ```
+
+   </TabItem>
+   <TabItem label="Python">
+
+   ```python
+   import os
+
+   import requests
+
+   response = requests.get(
+       f"{os.environ['KRK_API_URL']}/players/plr_2b7xq9mhk4",
+       headers={"X-API-Key": os.environ["KRK_API_KEY"]},
+   )
+   response.raise_for_status()
+
+   print(response.json())
+   ```
+
+   </TabItem>
+   </Tabs>
+
+   The response has status `200` and the profile of Ola K., with `"display_name": "Ola K."` and a `rating` object.
+
+## If the key is missing or wrong
+
+When a request has no `X-API-Key` header, or the key isn't valid, the API returns status `401` with this body:
+
+```json
+{
+  "type": "https://saverio-cirillo.com/portfolio/errors/#unauthenticated",
+  "title": "Authentication required",
+  "status": 401,
+  "detail": "Send a valid API key in the X-API-Key header.",
+  "instance": "/v1/players/plr_2b7xq9mhk4"
+}
+```
+
+Check that the header name is exactly `X-API-Key` and that the environment variable is set in the terminal where you run the request.
+
+## Keep your key secret
+
+- Keep the key on a server. Don't put it in a browser app or a mobile app, where anyone can read it.
+- Don't commit the key to a repository. Load it from an environment variable or a secrets manager.
+- If a key leaks, replace it and stop using the old one.
