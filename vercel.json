@@ -6,8 +6,5 @@
   "trailingSlash": true,
   "redirects": [
     { "source": "/", "destination": "/portfolio/", "permanent": false }
-  ],
-  "rewrites": [
-    { "source": "/portfolio/:path*", "destination": "/:path*" }
   ]
 }
