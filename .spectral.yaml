@@ -1,0 +1,3 @@
+# Spectral ruleset for the OpenAPI spec. Custom rules arrive in phase 5.
+extends:
+  - spectral:oas

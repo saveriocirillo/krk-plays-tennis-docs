@@ -12,7 +12,8 @@
     "build": "astro build && node scripts/copy-404.mjs",
     "preview": "astro preview",
     "check": "astro check",
-    "astro": "astro"
+    "astro": "astro",
+    "lint:spec": "spectral lint openapi/krkplaystennis.v1.yaml --fail-severity=warn"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.6",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@stoplight/spectral-cli": "^6.17.0",
     "typescript": "^6.0.3"
   }
 }

@@ -1,0 +1,1719 @@
+openapi: 3.1.0
+
+info:
+  title: KRKplaysTennis API
+  version: 1.0.0
+  summary: Ratings for amateur tennis players in Kraków, based on real match results.
+  description: |
+    The KRKplaysTennis API collects singles match results from amateur leagues and tournaments in Kraków and rates each player from those results.
+
+    A player's self-assessed [NTRP](https://www.usta.com/en/home/coach-organize/tennis-tool-center/run-usta-programs/national/understanding-ntrp-ratings.html) level sets a starting rating. Each rated match then moves the rating, and a confidence value from 0 to 100 shows how settled the rating is. The rating isn't an NTRP rating: NTRP is only the starting point.
+
+    KRKplaysTennis is a fictional API. All players, venues, competitions, and organizers are invented.
+
+    ## Authentication
+
+    - Read operations need an API key in the `X-API-Key` header.
+    - `POST /matches` needs an OAuth 2.0 access token with the `matches:write` scope, sent as `Authorization: Bearer <token>`. Competition organizers get tokens with the client credentials flow.
+
+    ## Pagination
+
+    List operations return up to `limit` items in `data`. When more items exist, `next_cursor` holds a value to pass as `cursor` in the next request. When `next_cursor` is `null`, you have the last page.
+
+    ## Errors
+
+    Errors use [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details with the `application/problem+json` media type. Each `type` URL links to the matching section of the [errors reference](https://saverio-cirillo.com/portfolio/errors/).
+
+    ## Times
+
+    Timestamps follow RFC 3339. Availability windows use local time in the `Europe/Warsaw` time zone.
+  contact:
+    name: KRKplaysTennis docs on GitHub
+    url: https://github.com/saveriocirillo/krk-plays-tennis-docs
+  license:
+    name: All rights reserved
+    url: https://github.com/saveriocirillo/krk-plays-tennis-docs/blob/main/NOTICE.md
+
+servers:
+  - url: https://api.krkplaystennis.example/v1
+    description: Production (fictional)
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Players
+    description: Player profiles, self-assessed levels, and availability.
+  - name: Ratings
+    description: Current ratings and the history of every rating change.
+  - name: Match suggestions
+    description: Opponents with a similar rating and overlapping availability.
+  - name: Matches
+    description: Singles match results. Organizers submit results, and the API rates them.
+  - name: Competitions
+    description: Leagues and tournaments, with their organizer, season, and match format.
+  - name: Venues
+    description: Tennis clubs and their courts.
+
+paths:
+  /players:
+    get:
+      operationId: listPlayers
+      summary: List players
+      description: Returns players ordered by display name. Filter by rating range or by preferred venue.
+      tags: [Players]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: min_rating
+          in: query
+          description: Returns only players with a rating greater than or equal to this value.
+          schema:
+            type: integer
+            minimum: 0
+          example: 1300
+        - name: max_rating
+          in: query
+          description: Returns only players with a rating less than or equal to this value.
+          schema:
+            type: integer
+            minimum: 0
+          example: 1500
+        - name: venue_id
+          in: query
+          description: Returns only players who list this venue as a preferred venue.
+          schema:
+            $ref: '#/components/schemas/VenueId'
+      responses:
+        '200':
+          description: A page of players.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerList'
+              examples:
+                players:
+                  summary: Players at Riverside Courts Podgórze
+                  value:
+                    data:
+                      - id: plr_9fz3tr6wn1
+                        display_name: Kasia W.
+                        self_assessed_ntrp: 4.0
+                        rating:
+                          value: 1499
+                          confidence: 70
+                        preferred_venue_ids: [ven_7hk2p9wq4m]
+                        availability:
+                          - day: saturday
+                            start: '10:00'
+                            end: '14:00'
+                          - day: sunday
+                            start: '10:00'
+                            end: '12:00'
+                        created_at: '2026-05-11T17:30:00Z'
+                      - id: plr_8mq4ws1yd6
+                        display_name: Marta Z.
+                        self_assessed_ntrp: 3.5
+                        rating:
+                          value: 1382
+                          confidence: 30
+                        preferred_venue_ids: [ven_3xr8tn5cva, ven_7hk2p9wq4m]
+                        availability:
+                          - day: tuesday
+                            start: '19:00'
+                            end: '22:00'
+                        created_at: '2026-09-04T19:02:00Z'
+                      - id: plr_2b7xq9mhk4
+                        display_name: Ola K.
+                        self_assessed_ntrp: 3.5
+                        rating:
+                          value: 1432
+                          confidence: 30
+                        preferred_venue_ids: [ven_7hk2p9wq4m]
+                        availability:
+                          - day: tuesday
+                            start: '18:00'
+                            end: '21:00'
+                          - day: saturday
+                            start: '09:00'
+                            end: '13:00'
+                        created_at: '2026-09-02T08:15:00Z'
+                    next_cursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /players/{player_id}:
+    get:
+      operationId: getPlayer
+      summary: Get a player
+      description: Returns a player's profile, current rating summary, and availability.
+      tags: [Players]
+      parameters:
+        - $ref: '#/components/parameters/PlayerIdPath'
+      responses:
+        '200':
+          description: The player.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Player'
+              examples:
+                player:
+                  $ref: '#/components/examples/PlayerOla'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /players/{player_id}/rating:
+    get:
+      operationId: getPlayerRating
+      summary: Get a player's rating
+      description: |
+        Returns a player's current rating, confidence, and the K-factor that applies to their next rated match.
+
+        To see how the rating got to its current value, list the player's rating history.
+      tags: [Ratings]
+      parameters:
+        - $ref: '#/components/parameters/PlayerIdPath'
+      responses:
+        '200':
+          description: The player's current rating.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+              examples:
+                rating:
+                  summary: Ola's rating after her first rated match
+                  value:
+                    player_id: plr_2b7xq9mhk4
+                    value: 1432
+                    confidence: 30
+                    k_factor: 48
+                    rated_matches: 1
+                    last_rated_match_at: '2026-10-10T18:00:00+02:00'
+                    updated_at: '2026-10-10T20:43:12Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /players/{player_id}/rating-history:
+    get:
+      operationId: listPlayerRatingHistory
+      summary: List a player's rating history
+      description: |
+        Returns every change to a player's rating or confidence, newest first. Each entry includes the reason for the change. Entries caused by a match also include the inputs to the calculation, so you can reproduce the change by hand.
+      tags: [Ratings]
+      parameters:
+        - $ref: '#/components/parameters/PlayerIdPath'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: A page of rating history entries, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingHistoryList'
+              examples:
+                history:
+                  summary: Ola's history after her first rated match
+                  value:
+                    data:
+                      - id: rtg_6ym2kd9qrz
+                        player_id: plr_2b7xq9mhk4
+                        occurred_at: '2026-10-10T20:43:12Z'
+                        reason:
+                          code: match_result
+                          match_id: mat_4nc8xq2vbt
+                          explanation: Won against Kasia W. (1520). Expected score 0.334, actual score 1. K-factor 48 because confidence was 20.
+                        value_before: 1400
+                        value_after: 1432
+                        change: 32
+                        confidence_before: 20
+                        confidence_after: 30
+                        calculation:
+                          opponent_id: plr_9fz3tr6wn1
+                          opponent_rating: 1520
+                          expected_score: 0.334
+                          actual_score: 1
+                          k_factor: 48
+                      - id: rtg_1pt8xv4hcn
+                        player_id: plr_2b7xq9mhk4
+                        occurred_at: '2026-09-02T08:15:00Z'
+                        reason:
+                          code: initial_assessment
+                          match_id: null
+                          explanation: Starting rating from a self-assessed NTRP level of 3.5.
+                        value_before: null
+                        value_after: 1400
+                        change: null
+                        confidence_before: null
+                        confidence_after: 20
+                        calculation: null
+                    next_cursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /players/{player_id}/match-suggestions:
+    get:
+      operationId: listMatchSuggestions
+      summary: List match suggestions
+      description: |
+        Returns opponents for a player, ranked by how close their rating is. A suggested opponent always shares at least one availability window with the player.
+
+        This list isn't paginated: it returns the best `limit` suggestions.
+      tags: [Match suggestions]
+      parameters:
+        - $ref: '#/components/parameters/PlayerIdPath'
+        - name: limit
+          in: query
+          description: Maximum number of suggestions to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 5
+        - name: max_rating_gap
+          in: query
+          description: Maximum difference between the player's rating and an opponent's rating, in either direction.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 500
+            default: 150
+        - name: venue_id
+          in: query
+          description: Returns only opponents who list this venue as a preferred venue.
+          schema:
+            $ref: '#/components/schemas/VenueId'
+      responses:
+        '200':
+          description: Suggested opponents, closest rating first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchSuggestionList'
+              examples:
+                suggestions:
+                  summary: Suggested opponents for Ola
+                  value:
+                    data:
+                      - player:
+                          id: plr_8mq4ws1yd6
+                          display_name: Marta Z.
+                          rating:
+                            value: 1382
+                            confidence: 30
+                        rating_gap: 50
+                        overlapping_availability:
+                          - day: tuesday
+                            start: '19:00'
+                            end: '21:00'
+                        shared_venue_ids: [ven_7hk2p9wq4m]
+                      - player:
+                          id: plr_9fz3tr6wn1
+                          display_name: Kasia W.
+                          rating:
+                            value: 1499
+                            confidence: 70
+                        rating_gap: 67
+                        overlapping_availability:
+                          - day: saturday
+                            start: '10:00'
+                            end: '13:00'
+                        shared_venue_ids: [ven_7hk2p9wq4m]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /matches:
+    get:
+      operationId: listMatches
+      summary: List matches
+      description: Returns matches ordered by `played_at`, newest first. Combine filters to narrow the results.
+      tags: [Matches]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: player_id
+          in: query
+          description: Returns only matches this player took part in.
+          schema:
+            $ref: '#/components/schemas/PlayerId'
+        - name: competition_id
+          in: query
+          description: Returns only matches in this competition.
+          schema:
+            $ref: '#/components/schemas/CompetitionId'
+        - name: status
+          in: query
+          description: Returns only matches with this status.
+          schema:
+            $ref: '#/components/schemas/MatchStatus'
+        - name: rating_status
+          in: query
+          description: Returns only matches with this rating status.
+          schema:
+            $ref: '#/components/schemas/RatingStatus'
+        - name: played_after
+          in: query
+          description: Returns only matches played at or after this time.
+          schema:
+            type: string
+            format: date-time
+          example: '2026-10-01T00:00:00+02:00'
+        - name: played_before
+          in: query
+          description: Returns only matches played before this time.
+          schema:
+            type: string
+            format: date-time
+          example: '2026-11-01T00:00:00+01:00'
+      responses:
+        '200':
+          description: A page of matches.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchList'
+              examples:
+                matches:
+                  summary: Recent matches in the Kraków Autumn League
+                  value:
+                    data:
+                      - id: mat_4nc8xq2vbt
+                        competition_id: cmp_6tw2hn8rxe
+                        venue_id: ven_7hk2p9wq4m
+                        court_number: 2
+                        played_at: '2026-10-10T18:00:00+02:00'
+                        player_ids: [plr_2b7xq9mhk4, plr_9fz3tr6wn1]
+                        status: completed
+                        score:
+                          sets:
+                            - games: [6, 4]
+                            - games: [3, 6]
+                          match_tiebreak: [10, 7]
+                        winner_id: plr_2b7xq9mhk4
+                        retired_player_id: null
+                        rating_status: rated
+                        created_at: '2026-10-10T20:41:00Z'
+                      - id: mat_7rk3mw9zse
+                        competition_id: cmp_6tw2hn8rxe
+                        venue_id: ven_3xr8tn5cva
+                        court_number: 1
+                        played_at: '2026-10-08T19:00:00+02:00'
+                        player_ids: [plr_5jd8vk2lc7, plr_8mq4ws1yd6]
+                        status: retired
+                        score:
+                          sets:
+                            - games: [6, 2]
+                            - games: [2, 1]
+                        winner_id: plr_5jd8vk2lc7
+                        retired_player_id: plr_8mq4ws1yd6
+                        rating_status: rated
+                        created_at: '2026-10-08T21:12:00Z'
+                      - id: mat_2vb6np4ktf
+                        competition_id: cmp_6tw2hn8rxe
+                        venue_id: ven_7hk2p9wq4m
+                        court_number: null
+                        played_at: '2026-10-05T10:00:00+02:00'
+                        player_ids: [plr_9fz3tr6wn1, plr_5jd8vk2lc7]
+                        status: walkover
+                        score: null
+                        winner_id: plr_9fz3tr6wn1
+                        retired_player_id: null
+                        rating_status: not_rated
+                        created_at: '2026-10-05T10:20:00Z'
+                    next_cursor: bWF0XzJ2YjZucDRrdGY
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+    post:
+      operationId: createMatch
+      summary: Submit a match result
+      description: |
+        Submits the result of a singles match. Only the organizer of the match's competition can submit it.
+
+        The API rates the match asynchronously. The response has `rating_status: pending`, and the status changes to `rated` when both players' ratings are updated, usually within a few minutes. Walkovers aren't rated and get `rating_status: not_rated`.
+
+        Send a unique `Idempotency-Key` with each new result. If a request fails because of a network error, retry it with the same key: the API returns the original response instead of creating a second match.
+      tags: [Matches]
+      security:
+        - OAuth2ClientCredentials: [matches:write]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: A unique value for this result, such as a UUID. The API keeps each key for 24 hours.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+          example: 5f0c6a2e-8d47-4b8e-9a51-2b3c7e1d9f04
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchInput'
+            examples:
+              completed:
+                summary: Completed match decided in a match tiebreak
+                value:
+                  competition_id: cmp_6tw2hn8rxe
+                  venue_id: ven_7hk2p9wq4m
+                  court_number: 2
+                  played_at: '2026-10-10T18:00:00+02:00'
+                  player_ids: [plr_2b7xq9mhk4, plr_9fz3tr6wn1]
+                  status: completed
+                  score:
+                    sets:
+                      - games: [6, 4]
+                      - games: [3, 6]
+                    match_tiebreak: [10, 7]
+              retired:
+                summary: Match ended by a retirement
+                value:
+                  competition_id: cmp_6tw2hn8rxe
+                  venue_id: ven_3xr8tn5cva
+                  court_number: 1
+                  played_at: '2026-10-08T19:00:00+02:00'
+                  player_ids: [plr_5jd8vk2lc7, plr_8mq4ws1yd6]
+                  status: retired
+                  retired_player_id: plr_8mq4ws1yd6
+                  score:
+                    sets:
+                      - games: [6, 2]
+                      - games: [2, 1]
+              walkover:
+                summary: Walkover
+                value:
+                  competition_id: cmp_6tw2hn8rxe
+                  venue_id: ven_7hk2p9wq4m
+                  played_at: '2026-10-05T10:00:00+02:00'
+                  player_ids: [plr_9fz3tr6wn1, plr_5jd8vk2lc7]
+                  status: walkover
+                  winner_id: plr_9fz3tr6wn1
+      responses:
+        '201':
+          description: The match is recorded. Rating happens asynchronously.
+          headers:
+            Location:
+              description: URL of the new match.
+              schema:
+                type: string
+                format: uri
+              example: https://api.krkplaystennis.example/v1/matches/mat_4nc8xq2vbt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+              examples:
+                completed:
+                  summary: Completed match waiting to be rated
+                  value:
+                    id: mat_4nc8xq2vbt
+                    competition_id: cmp_6tw2hn8rxe
+                    venue_id: ven_7hk2p9wq4m
+                    court_number: 2
+                    played_at: '2026-10-10T18:00:00+02:00'
+                    player_ids: [plr_2b7xq9mhk4, plr_9fz3tr6wn1]
+                    status: completed
+                    score:
+                      sets:
+                        - games: [6, 4]
+                        - games: [3, 6]
+                      match_tiebreak: [10, 7]
+                    winner_id: plr_2b7xq9mhk4
+                    retired_player_id: null
+                    rating_status: pending
+                    created_at: '2026-10-10T20:41:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: The access token can't submit this result.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                insufficientScope:
+                  summary: Token without the matches:write scope
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#insufficient-scope
+                    title: Insufficient scope
+                    status: 403
+                    detail: This operation requires the matches:write scope.
+                    instance: /v1/matches
+                notOrganizer:
+                  summary: Competition run by another organizer
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#not-competition-organizer
+                    title: Not the competition organizer
+                    status: 403
+                    detail: Only the organizer of competition cmp_1qv7mz3kpd can submit its results.
+                    instance: /v1/matches
+        '409':
+          description: The request conflicts with an earlier request or an existing match.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                idempotencyConflict:
+                  summary: Idempotency key reused with a different body
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#idempotency-conflict
+                    title: Idempotency key conflict
+                    status: 409
+                    detail: The Idempotency-Key 5f0c6a2e-8d47-4b8e-9a51-2b3c7e1d9f04 was already used with a different request body.
+                    instance: /v1/matches
+                duplicateMatch:
+                  summary: Same players, competition, and start time
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#duplicate-match
+                    title: Duplicate match
+                    status: 409
+                    detail: Match mat_4nc8xq2vbt already records these players in this competition at 2026-10-10T18:00:00+02:00.
+                    instance: /v1/matches
+        '422':
+          description: The request is well formed, but the result isn't valid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              examples:
+                invalidScore:
+                  summary: Score that can't end a set
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#invalid-score
+                    title: Invalid score
+                    status: 422
+                    detail: The score isn't valid for the competition's match format.
+                    instance: /v1/matches
+                    errors:
+                      - pointer: /score/sets/0/games
+                        detail: A set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. 6-5 isn't a final set score.
+                validationFailed:
+                  summary: Same player on both sides
+                  value:
+                    type: https://saverio-cirillo.com/portfolio/errors/#validation-failed
+                    title: Validation failed
+                    status: 422
+                    detail: The request has 1 invalid field.
+                    instance: /v1/matches
+                    errors:
+                      - pointer: /player_ids
+                        detail: The two players must be different.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /matches/{match_id}:
+    get:
+      operationId: getMatch
+      summary: Get a match
+      description: Returns a match, its score, and its rating status.
+      tags: [Matches]
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          description: The match ID.
+          schema:
+            $ref: '#/components/schemas/MatchId'
+      responses:
+        '200':
+          description: The match.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Match'
+              examples:
+                completed:
+                  $ref: '#/components/examples/MatchCompleted'
+                retired:
+                  $ref: '#/components/examples/MatchRetired'
+                walkover:
+                  $ref: '#/components/examples/MatchWalkover'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /competitions:
+    get:
+      operationId: listCompetitions
+      summary: List competitions
+      description: Returns leagues and tournaments, ordered by start date, newest first.
+      tags: [Competitions]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: type
+          in: query
+          description: Returns only competitions of this type.
+          schema:
+            $ref: '#/components/schemas/CompetitionType'
+        - name: season
+          in: query
+          description: Returns only competitions in this season.
+          schema:
+            $ref: '#/components/schemas/Season'
+        - name: venue_id
+          in: query
+          description: Returns only competitions played at this venue.
+          schema:
+            $ref: '#/components/schemas/VenueId'
+      responses:
+        '200':
+          description: A page of competitions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetitionList'
+              examples:
+                competitions:
+                  summary: Competitions in 2026
+                  value:
+                    data:
+                      - id: cmp_1qv7mz3kpd
+                        name: Nowa Huta Indoor Open 2026
+                        type: tournament
+                        organizer:
+                          id: org_9tn3bx6rlp
+                          name: Nowa Huta Indoor Tennis Hall
+                        season: 2026-winter
+                        starts_on: '2026-12-05'
+                        ends_on: '2026-12-07'
+                        match_format: best_of_3
+                        venue_ids: [ven_3xr8tn5cva]
+                      - id: cmp_6tw2hn8rxe
+                        name: Kraków Autumn League 2026
+                        type: league
+                        organizer:
+                          id: org_4kd7ws2mzq
+                          name: Kraków Amateur Tennis Association
+                        season: 2026-autumn
+                        starts_on: '2026-09-01'
+                        ends_on: '2026-11-30'
+                        match_format: best_of_3_match_tiebreak
+                        venue_ids: [ven_7hk2p9wq4m, ven_3xr8tn5cva]
+                    next_cursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /competitions/{competition_id}:
+    get:
+      operationId: getCompetition
+      summary: Get a competition
+      description: Returns a league or tournament, including its organizer and match format.
+      tags: [Competitions]
+      parameters:
+        - name: competition_id
+          in: path
+          required: true
+          description: The competition ID.
+          schema:
+            $ref: '#/components/schemas/CompetitionId'
+      responses:
+        '200':
+          description: The competition.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Competition'
+              examples:
+                league:
+                  $ref: '#/components/examples/CompetitionLeague'
+                tournament:
+                  $ref: '#/components/examples/CompetitionTournament'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /venues:
+    get:
+      operationId: listVenues
+      summary: List venues
+      description: Returns tennis venues ordered by name.
+      tags: [Venues]
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: district
+          in: query
+          description: Returns only venues in this Kraków district.
+          schema:
+            type: string
+          example: Podgórze
+      responses:
+        '200':
+          description: A page of venues.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VenueList'
+              examples:
+                venues:
+                  summary: All venues
+                  value:
+                    data:
+                      - id: ven_3xr8tn5cva
+                        name: Nowa Huta Indoor Tennis Hall
+                        district: Nowa Huta
+                        address: al. Serwisowa 21, 31-940 Kraków
+                        courts:
+                          - number: 1
+                            surface: hard
+                            indoor: true
+                          - number: 2
+                            surface: hard
+                            indoor: true
+                          - number: 3
+                            surface: carpet
+                            indoor: true
+                      - id: ven_7hk2p9wq4m
+                        name: Riverside Courts Podgórze
+                        district: Podgórze
+                        address: ul. Rakietowa 7, 30-532 Kraków
+                        courts:
+                          - number: 1
+                            surface: clay
+                            indoor: false
+                          - number: 2
+                            surface: clay
+                            indoor: false
+                          - number: 3
+                            surface: clay
+                            indoor: false
+                          - number: 4
+                            surface: hard
+                            indoor: true
+                    next_cursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /venues/{venue_id}:
+    get:
+      operationId: getVenue
+      summary: Get a venue
+      description: Returns a venue and its courts.
+      tags: [Venues]
+      parameters:
+        - name: venue_id
+          in: path
+          required: true
+          description: The venue ID.
+          schema:
+            $ref: '#/components/schemas/VenueId'
+      responses:
+        '200':
+          description: The venue.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Venue'
+              examples:
+                venue:
+                  $ref: '#/components/examples/VenuePodgorze'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: An API key for read operations. Send it in the `X-API-Key` header with every request.
+    OAuth2ClientCredentials:
+      type: oauth2
+      description: Access tokens for competition organizers, issued with the client credentials flow. Tokens expire after 1 hour.
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.krkplaystennis.example/oauth/token
+          scopes:
+            matches:write: Submit match results for competitions you organize.
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of items to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      description: The `next_cursor` value from the previous page. Omit it to get the first page.
+      schema:
+        type: string
+      example: bWF0XzJ2YjZucDRrdGY
+    PlayerIdPath:
+      name: player_id
+      in: path
+      required: true
+      description: The player ID.
+      schema:
+        $ref: '#/components/schemas/PlayerId'
+
+  responses:
+    BadRequest:
+      description: The request is malformed, for example a query parameter has the wrong type.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            invalidRequest:
+              summary: Limit out of range
+              value:
+                type: https://saverio-cirillo.com/portfolio/errors/#invalid-request
+                title: Invalid request
+                status: 400
+                detail: The request has 1 invalid parameter.
+                instance: /v1/players
+                errors:
+                  - pointer: '#/limit'
+                    detail: limit must be between 1 and 100.
+    Unauthorized:
+      description: The credentials are missing, invalid, or expired.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            unauthenticated:
+              summary: Missing API key
+              value:
+                type: https://saverio-cirillo.com/portfolio/errors/#unauthenticated
+                title: Authentication required
+                status: 401
+                detail: Send a valid API key in the X-API-Key header.
+                instance: /v1/players/plr_2b7xq9mhk4
+    NotFound:
+      description: No resource exists with this ID.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            notFound:
+              summary: Unknown player ID
+              value:
+                type: https://saverio-cirillo.com/portfolio/errors/#not-found
+                title: Not found
+                status: 404
+                detail: No player exists with the ID plr_0000000000.
+                instance: /v1/players/plr_0000000000
+    TooManyRequests:
+      description: You sent too many requests. Wait for the number of seconds in `Retry-After`, then retry.
+      headers:
+        Retry-After:
+          description: Number of seconds to wait before you retry.
+          schema:
+            type: integer
+            minimum: 1
+          example: 30
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          examples:
+            rateLimited:
+              summary: Rate limit reached
+              value:
+                type: https://saverio-cirillo.com/portfolio/errors/#rate-limited
+                title: Rate limit reached
+                status: 429
+                detail: This API key is limited to 60 requests per minute. Retry after 30 seconds.
+                instance: /v1/matches
+
+  schemas:
+    PlayerId:
+      type: string
+      description: A player ID. Starts with `plr_`.
+      pattern: '^plr_[a-z0-9]{10}$'
+      examples: [plr_2b7xq9mhk4]
+    VenueId:
+      type: string
+      description: A venue ID. Starts with `ven_`.
+      pattern: '^ven_[a-z0-9]{10}$'
+      examples: [ven_7hk2p9wq4m]
+    CompetitionId:
+      type: string
+      description: A competition ID. Starts with `cmp_`.
+      pattern: '^cmp_[a-z0-9]{10}$'
+      examples: [cmp_6tw2hn8rxe]
+    MatchId:
+      type: string
+      description: A match ID. Starts with `mat_`.
+      pattern: '^mat_[a-z0-9]{10}$'
+      examples: [mat_4nc8xq2vbt]
+    OrganizerId:
+      type: string
+      description: An organizer ID. Starts with `org_`.
+      pattern: '^org_[a-z0-9]{10}$'
+      examples: [org_4kd7ws2mzq]
+    RatingHistoryEntryId:
+      type: string
+      description: A rating history entry ID. Starts with `rtg_`.
+      pattern: '^rtg_[a-z0-9]{10}$'
+      examples: [rtg_6ym2kd9qrz]
+    NextCursor:
+      type: [string, 'null']
+      description: Pass this value as `cursor` to get the next page. `null` means this is the last page.
+      examples: [bWF0XzJ2YjZucDRrdGY]
+    Season:
+      type: string
+      description: A season, written as the year and a season name.
+      pattern: '^[0-9]{4}-(spring|summer|autumn|winter)$'
+      examples: [2026-autumn]
+
+    RatingValue:
+      type: integer
+      description: A rating. New players start between 1000 and 1800, based on their self-assessed NTRP level.
+      minimum: 0
+      examples: [1432]
+    Confidence:
+      type: integer
+      description: How settled a rating is, from 0 to 100. New players start at 20. Each rated match adds 10, up to 95. After 60 days without a rated match, confidence drops by 5 every 30 days, down to 20.
+      minimum: 0
+      maximum: 100
+      examples: [30]
+    KFactor:
+      type: integer
+      description: The maximum number of points a rating can move in one match. It's 48 when confidence is below 40, 32 when confidence is from 40 to 69, and 16 when confidence is 70 or higher.
+      enum: [48, 32, 16]
+    RatingSummary:
+      type: object
+      description: A player's current rating and confidence.
+      required: [value, confidence]
+      properties:
+        value:
+          $ref: '#/components/schemas/RatingValue'
+        confidence:
+          $ref: '#/components/schemas/Confidence'
+
+    Weekday:
+      type: string
+      enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
+    AvailabilityWindow:
+      type: object
+      description: A weekly time window, in local time (`Europe/Warsaw`).
+      required: [day, start, end]
+      properties:
+        day:
+          $ref: '#/components/schemas/Weekday'
+        start:
+          type: string
+          description: Start time, as `HH:MM` in 24-hour format.
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          examples: ['18:00']
+        end:
+          type: string
+          description: End time, as `HH:MM` in 24-hour format. Must be later than `start`.
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          examples: ['21:00']
+
+    Player:
+      type: object
+      required: [id, display_name, self_assessed_ntrp, rating, preferred_venue_ids, availability, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/PlayerId'
+        display_name:
+          type: string
+          description: The player's first name and last initial.
+          examples: [Ola K.]
+        self_assessed_ntrp:
+          type: number
+          description: The player's self-assessed level on the NTRP scale, from 1.5 to 5.5 in steps of 0.5. It sets the starting rating as 1000 + (NTRP - 1.5) × 200 and doesn't change afterward.
+          minimum: 1.5
+          maximum: 5.5
+          multipleOf: 0.5
+          examples: [3.5]
+        rating:
+          $ref: '#/components/schemas/RatingSummary'
+        preferred_venue_ids:
+          type: array
+          description: Venues where the player prefers to play.
+          items:
+            $ref: '#/components/schemas/VenueId'
+        availability:
+          type: array
+          description: Weekly time windows when the player can usually play.
+          items:
+            $ref: '#/components/schemas/AvailabilityWindow'
+        created_at:
+          type: string
+          format: date-time
+          description: When the player joined.
+    PlayerList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Player'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    Rating:
+      type: object
+      required: [player_id, value, confidence, k_factor, rated_matches, last_rated_match_at, updated_at]
+      properties:
+        player_id:
+          $ref: '#/components/schemas/PlayerId'
+        value:
+          $ref: '#/components/schemas/RatingValue'
+        confidence:
+          $ref: '#/components/schemas/Confidence'
+        k_factor:
+          $ref: '#/components/schemas/KFactor'
+        rated_matches:
+          type: integer
+          description: Number of rated matches the player has played.
+          minimum: 0
+          examples: [1]
+        last_rated_match_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the player's most recent rated match was played. `null` if the player has no rated matches.
+        updated_at:
+          type: string
+          format: date-time
+          description: When the rating or confidence last changed.
+
+    RatingChangeReasonCode:
+      type: string
+      description: |
+        Why the rating or confidence changed:
+
+        - `initial_assessment`: the starting rating, set from the self-assessed NTRP level.
+        - `match_result`: a rated match. The `calculation` object has the inputs.
+        - `inactivity`: confidence dropped after a period without rated matches. The rating value doesn't change.
+      enum: [initial_assessment, match_result, inactivity]
+    RatingCalculation:
+      type: object
+      description: |
+        The inputs to a match rating change. The change is `k_factor × (actual_score - expected_score)`, rounded to the nearest integer.
+      required: [opponent_id, opponent_rating, expected_score, actual_score, k_factor]
+      properties:
+        opponent_id:
+          $ref: '#/components/schemas/PlayerId'
+        opponent_rating:
+          $ref: '#/components/schemas/RatingValue'
+        expected_score:
+          type: number
+          description: The player's chance of winning before the match, from 0 to 1. It's 1 / (1 + 10^((opponent_rating - rating) / 400)), rounded to 3 decimal places.
+          minimum: 0
+          maximum: 1
+          examples: [0.334]
+        actual_score:
+          type: number
+          description: 1 for a win and 0 for a loss. For a retired match, the share of games the player won, rounded to 3 decimal places. A completed match tiebreak counts as one game.
+          minimum: 0
+          maximum: 1
+          examples: [1]
+        k_factor:
+          $ref: '#/components/schemas/KFactor'
+    RatingHistoryEntry:
+      type: object
+      required: [id, player_id, occurred_at, reason, value_before, value_after, change, confidence_before, confidence_after, calculation]
+      properties:
+        id:
+          $ref: '#/components/schemas/RatingHistoryEntryId'
+        player_id:
+          $ref: '#/components/schemas/PlayerId'
+        occurred_at:
+          type: string
+          format: date-time
+          description: When the change was applied.
+        reason:
+          type: object
+          required: [code, match_id, explanation]
+          properties:
+            code:
+              $ref: '#/components/schemas/RatingChangeReasonCode'
+            match_id:
+              description: The match that caused the change. `null` unless `code` is `match_result`.
+              oneOf:
+                - $ref: '#/components/schemas/MatchId'
+                - type: 'null'
+            explanation:
+              type: string
+              description: A one-sentence explanation of the change, for display to players.
+        value_before:
+          description: The rating before the change. `null` for `initial_assessment`.
+          oneOf:
+            - $ref: '#/components/schemas/RatingValue'
+            - type: 'null'
+        value_after:
+          $ref: '#/components/schemas/RatingValue'
+        change:
+          type: [integer, 'null']
+          description: '`value_after` minus `value_before`. `null` for `initial_assessment`.'
+          examples: [32]
+        confidence_before:
+          description: The confidence before the change. `null` for `initial_assessment`.
+          oneOf:
+            - $ref: '#/components/schemas/Confidence'
+            - type: 'null'
+        confidence_after:
+          $ref: '#/components/schemas/Confidence'
+        calculation:
+          description: The inputs to the calculation. `null` unless `reason.code` is `match_result`.
+          oneOf:
+            - $ref: '#/components/schemas/RatingCalculation'
+            - type: 'null'
+    RatingHistoryList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingHistoryEntry'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    MatchSuggestion:
+      type: object
+      required: [player, rating_gap, overlapping_availability, shared_venue_ids]
+      properties:
+        player:
+          type: object
+          description: The suggested opponent.
+          required: [id, display_name, rating]
+          properties:
+            id:
+              $ref: '#/components/schemas/PlayerId'
+            display_name:
+              type: string
+              examples: [Marta Z.]
+            rating:
+              $ref: '#/components/schemas/RatingSummary'
+        rating_gap:
+          type: integer
+          description: The absolute difference between the two players' ratings.
+          minimum: 0
+          examples: [50]
+        overlapping_availability:
+          type: array
+          description: Weekly time windows when both players are available. Always has at least one item.
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AvailabilityWindow'
+        shared_venue_ids:
+          type: array
+          description: Venues both players prefer. Can be empty.
+          items:
+            $ref: '#/components/schemas/VenueId'
+    MatchSuggestionList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchSuggestion'
+
+    MatchStatus:
+      type: string
+      description: |
+        How the match ended:
+
+        - `completed`: the match was played to the end.
+        - `retired`: a player stopped during the match. The match is rated on the games completed.
+        - `walkover`: a player didn't show up or withdrew before the match. The match isn't rated.
+      enum: [completed, retired, walkover]
+    RatingStatus:
+      type: string
+      description: |
+        Whether the match has affected ratings:
+
+        - `pending`: the result is recorded, and the rating update hasn't run yet.
+        - `rated`: both players' ratings are updated.
+        - `not_rated`: the match doesn't affect ratings, for example a walkover.
+      enum: [pending, rated, not_rated]
+    GamePair:
+      type: array
+      description: Two non-negative integers, in the same order as `player_ids`.
+      items:
+        type: integer
+        minimum: 0
+      minItems: 2
+      maxItems: 2
+      examples: [[6, 4]]
+    Set:
+      type: object
+      required: [games]
+      properties:
+        games:
+          $ref: '#/components/schemas/GamePair'
+        tiebreak:
+          description: Tiebreak points, only for a set that ended 7-6.
+          $ref: '#/components/schemas/GamePair'
+    Score:
+      type: object
+      description: |
+        The score, set by set. Every pair of numbers is in the same order as `player_ids`.
+
+        A set ends at 6 games with a 2-game lead, at 7-5, or at 7-6 with a tiebreak. In the `best_of_3_match_tiebreak` format, a match tiebreak to 10 points, with a 2-point lead, replaces the third set. In a retired match, the last set can be unfinished.
+      required: [sets]
+      properties:
+        sets:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/Set'
+        match_tiebreak:
+          description: Match tiebreak points, only in the `best_of_3_match_tiebreak` format.
+          $ref: '#/components/schemas/GamePair'
+          examples: [[10, 7]]
+
+    MatchInputBase:
+      type: object
+      required: [competition_id, venue_id, played_at, player_ids, status]
+      properties:
+        competition_id:
+          $ref: '#/components/schemas/CompetitionId'
+        venue_id:
+          $ref: '#/components/schemas/VenueId'
+        court_number:
+          type: integer
+          description: The court number at the venue. Optional.
+          minimum: 1
+          examples: [2]
+        played_at:
+          type: string
+          format: date-time
+          description: When the match started, with the UTC offset.
+          examples: ['2026-10-10T18:00:00+02:00']
+        player_ids:
+          type: array
+          description: The two players. Every score pair uses this order.
+          items:
+            $ref: '#/components/schemas/PlayerId'
+          minItems: 2
+          maxItems: 2
+    CompletedMatchInput:
+      title: Completed match
+      allOf:
+        - $ref: '#/components/schemas/MatchInputBase'
+        - type: object
+          required: [status, score]
+          properties:
+            status:
+              const: completed
+            score:
+              $ref: '#/components/schemas/Score'
+    RetiredMatchInput:
+      title: Retired match
+      allOf:
+        - $ref: '#/components/schemas/MatchInputBase'
+        - type: object
+          required: [status, score, retired_player_id]
+          properties:
+            status:
+              const: retired
+            score:
+              $ref: '#/components/schemas/Score'
+            retired_player_id:
+              description: The player who stopped. Must be one of `player_ids`.
+              $ref: '#/components/schemas/PlayerId'
+    WalkoverMatchInput:
+      title: Walkover
+      allOf:
+        - $ref: '#/components/schemas/MatchInputBase'
+        - type: object
+          required: [status, winner_id]
+          properties:
+            status:
+              const: walkover
+            winner_id:
+              description: The player who advances. Must be one of `player_ids`.
+              $ref: '#/components/schemas/PlayerId'
+    MatchInput:
+      description: A match result. The fields you send depend on `status`.
+      oneOf:
+        - $ref: '#/components/schemas/CompletedMatchInput'
+        - $ref: '#/components/schemas/RetiredMatchInput'
+        - $ref: '#/components/schemas/WalkoverMatchInput'
+      discriminator:
+        propertyName: status
+        mapping:
+          completed: '#/components/schemas/CompletedMatchInput'
+          retired: '#/components/schemas/RetiredMatchInput'
+          walkover: '#/components/schemas/WalkoverMatchInput'
+
+    Match:
+      type: object
+      required: [id, competition_id, venue_id, court_number, played_at, player_ids, status, score, winner_id, retired_player_id, rating_status, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/MatchId'
+        competition_id:
+          $ref: '#/components/schemas/CompetitionId'
+        venue_id:
+          $ref: '#/components/schemas/VenueId'
+        court_number:
+          type: [integer, 'null']
+          description: The court number at the venue. `null` if the organizer didn't send it.
+          minimum: 1
+        played_at:
+          type: string
+          format: date-time
+          description: When the match started.
+        player_ids:
+          type: array
+          description: The two players. Every score pair uses this order.
+          items:
+            $ref: '#/components/schemas/PlayerId'
+          minItems: 2
+          maxItems: 2
+        status:
+          $ref: '#/components/schemas/MatchStatus'
+        score:
+          description: The score. `null` for a walkover.
+          oneOf:
+            - $ref: '#/components/schemas/Score'
+            - type: 'null'
+        winner_id:
+          $ref: '#/components/schemas/PlayerId'
+        retired_player_id:
+          description: The player who stopped. `null` unless `status` is `retired`.
+          oneOf:
+            - $ref: '#/components/schemas/PlayerId'
+            - type: 'null'
+        rating_status:
+          $ref: '#/components/schemas/RatingStatus'
+        created_at:
+          type: string
+          format: date-time
+          description: When the result was submitted.
+    MatchList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Match'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    CompetitionType:
+      type: string
+      description: '`league` for a season-long round robin, `tournament` for a knockout event over a few days.'
+      enum: [league, tournament]
+    MatchFormat:
+      type: string
+      description: |
+        The match format for every match in the competition:
+
+        - `best_of_3`: best of three sets.
+        - `best_of_3_match_tiebreak`: best of three sets, with a match tiebreak to 10 points instead of a third set.
+      enum: [best_of_3, best_of_3_match_tiebreak]
+    Competition:
+      type: object
+      required: [id, name, type, organizer, season, starts_on, ends_on, match_format, venue_ids]
+      properties:
+        id:
+          $ref: '#/components/schemas/CompetitionId'
+        name:
+          type: string
+          examples: [Kraków Autumn League 2026]
+        type:
+          $ref: '#/components/schemas/CompetitionType'
+        organizer:
+          type: object
+          description: The organizer. Only this organizer can submit results for the competition.
+          required: [id, name]
+          properties:
+            id:
+              $ref: '#/components/schemas/OrganizerId'
+            name:
+              type: string
+              examples: [Kraków Amateur Tennis Association]
+        season:
+          $ref: '#/components/schemas/Season'
+        starts_on:
+          type: string
+          format: date
+          description: The first day of the competition.
+        ends_on:
+          type: string
+          format: date
+          description: The last day of the competition.
+        match_format:
+          $ref: '#/components/schemas/MatchFormat'
+        venue_ids:
+          type: array
+          description: Venues where the competition's matches are played.
+          items:
+            $ref: '#/components/schemas/VenueId'
+    CompetitionList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Competition'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    Court:
+      type: object
+      required: [number, surface, indoor]
+      properties:
+        number:
+          type: integer
+          minimum: 1
+          examples: [2]
+        surface:
+          type: string
+          enum: [clay, hard, grass, carpet, artificial_grass]
+        indoor:
+          type: boolean
+          description: '`true` for an indoor court or a court under a seasonal dome.'
+    Venue:
+      type: object
+      required: [id, name, district, address, courts]
+      properties:
+        id:
+          $ref: '#/components/schemas/VenueId'
+        name:
+          type: string
+          examples: [Riverside Courts Podgórze]
+        district:
+          type: string
+          description: The Kraków district.
+          examples: [Podgórze]
+        address:
+          type: string
+          examples: [ul. Rakietowa 7, 30-532 Kraków]
+        courts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Court'
+    VenueList:
+      type: object
+      required: [data, next_cursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Venue'
+        next_cursor:
+          $ref: '#/components/schemas/NextCursor'
+
+    Problem:
+      type: object
+      description: An error, as RFC 9457 problem details.
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: A URL that identifies the error type and links to its documentation.
+        title:
+          type: string
+          description: A short summary of the error type. It's the same for every error of this type.
+        status:
+          type: integer
+          description: The HTTP status code.
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: An explanation of this occurrence of the error.
+        instance:
+          type: string
+          description: The request path that caused the error.
+        errors:
+          type: array
+          description: One item per invalid field or parameter. Only for `invalid-request`, `invalid-score`, and `validation-failed`.
+          items:
+            type: object
+            required: [pointer, detail]
+            properties:
+              pointer:
+                type: string
+                description: A JSON Pointer to the invalid field in the request body, or `#/` followed by the name of an invalid query parameter.
+                examples: [/score/sets/0/games]
+              detail:
+                type: string
+                description: What's wrong with the field and how to fix it.
+
+  examples:
+    PlayerOla:
+      summary: Ola K., after her first rated match
+      value:
+        id: plr_2b7xq9mhk4
+        display_name: Ola K.
+        self_assessed_ntrp: 3.5
+        rating:
+          value: 1432
+          confidence: 30
+        preferred_venue_ids: [ven_7hk2p9wq4m]
+        availability:
+          - day: tuesday
+            start: '18:00'
+            end: '21:00'
+          - day: saturday
+            start: '09:00'
+            end: '13:00'
+        created_at: '2026-09-02T08:15:00Z'
+    MatchCompleted:
+      summary: Completed match, decided in a match tiebreak
+      value:
+        id: mat_4nc8xq2vbt
+        competition_id: cmp_6tw2hn8rxe
+        venue_id: ven_7hk2p9wq4m
+        court_number: 2
+        played_at: '2026-10-10T18:00:00+02:00'
+        player_ids: [plr_2b7xq9mhk4, plr_9fz3tr6wn1]
+        status: completed
+        score:
+          sets:
+            - games: [6, 4]
+            - games: [3, 6]
+          match_tiebreak: [10, 7]
+        winner_id: plr_2b7xq9mhk4
+        retired_player_id: null
+        rating_status: rated
+        created_at: '2026-10-10T20:41:00Z'
+    MatchRetired:
+      summary: Retired match, rated on the games completed
+      value:
+        id: mat_7rk3mw9zse
+        competition_id: cmp_6tw2hn8rxe
+        venue_id: ven_3xr8tn5cva
+        court_number: 1
+        played_at: '2026-10-08T19:00:00+02:00'
+        player_ids: [plr_5jd8vk2lc7, plr_8mq4ws1yd6]
+        status: retired
+        score:
+          sets:
+            - games: [6, 2]
+            - games: [2, 1]
+        winner_id: plr_5jd8vk2lc7
+        retired_player_id: plr_8mq4ws1yd6
+        rating_status: rated
+        created_at: '2026-10-08T21:12:00Z'
+    MatchWalkover:
+      summary: Walkover, not rated
+      value:
+        id: mat_2vb6np4ktf
+        competition_id: cmp_6tw2hn8rxe
+        venue_id: ven_7hk2p9wq4m
+        court_number: null
+        played_at: '2026-10-05T10:00:00+02:00'
+        player_ids: [plr_9fz3tr6wn1, plr_5jd8vk2lc7]
+        status: walkover
+        score: null
+        winner_id: plr_9fz3tr6wn1
+        retired_player_id: null
+        rating_status: not_rated
+        created_at: '2026-10-05T10:20:00Z'
+    CompetitionLeague:
+      summary: League
+      value:
+        id: cmp_6tw2hn8rxe
+        name: Kraków Autumn League 2026
+        type: league
+        organizer:
+          id: org_4kd7ws2mzq
+          name: Kraków Amateur Tennis Association
+        season: 2026-autumn
+        starts_on: '2026-09-01'
+        ends_on: '2026-11-30'
+        match_format: best_of_3_match_tiebreak
+        venue_ids: [ven_7hk2p9wq4m, ven_3xr8tn5cva]
+    CompetitionTournament:
+      summary: Tournament
+      value:
+        id: cmp_1qv7mz3kpd
+        name: Nowa Huta Indoor Open 2026
+        type: tournament
+        organizer:
+          id: org_9tn3bx6rlp
+          name: Nowa Huta Indoor Tennis Hall
+        season: 2026-winter
+        starts_on: '2026-12-05'
+        ends_on: '2026-12-07'
+        match_format: best_of_3
+        venue_ids: [ven_3xr8tn5cva]
+    VenuePodgorze:
+      summary: Outdoor clay club with one covered court
+      value:
+        id: ven_7hk2p9wq4m
+        name: Riverside Courts Podgórze
+        district: Podgórze
+        address: ul. Rakietowa 7, 30-532 Kraków
+        courts:
+          - number: 1
+            surface: clay
+            indoor: false
+          - number: 2
+            surface: clay
+            indoor: false
+          - number: 3
+            surface: clay
+            indoor: false
+          - number: 4
+            surface: hard
+            indoor: true
