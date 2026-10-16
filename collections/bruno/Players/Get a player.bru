@@ -1,0 +1,23 @@
+meta {
+  name: Get a player
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/players/plr_2b7xq9mhk4
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/getplayer/
+}

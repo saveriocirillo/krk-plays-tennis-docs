@@ -1,0 +1,23 @@
+meta {
+  name: Get a competition
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/competitions/cmp_6tw2hn8rxe
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/getcompetition/
+}

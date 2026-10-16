@@ -1,0 +1,28 @@
+meta {
+  name: List matches
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/matches?competition_id=cmp_6tw2hn8rxe&limit=20
+  body: none
+  auth: none
+}
+
+params:query {
+  competition_id: cmp_6tw2hn8rxe
+  limit: 20
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/listmatches/
+}

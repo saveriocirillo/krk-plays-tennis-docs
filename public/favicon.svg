@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Tennis ball in the saverio-cirillo.com accent blue, readable on light and dark tabs. -->
+  <circle cx="16" cy="16" r="15" fill="#1d4ed8"/>
+  <path d="M5.4 5.4a15 15 0 0 1 0 21.2M26.6 5.4a15 15 0 0 0 0 21.2" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

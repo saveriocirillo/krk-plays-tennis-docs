@@ -1,0 +1,28 @@
+meta {
+  name: List match suggestions
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/players/plr_2b7xq9mhk4/match-suggestions?limit=5&max_rating_gap=150
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 5
+  max_rating_gap: 150
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+docs {
+  Reference: https://saverio-cirillo.com/portfolio/reference/operations/listmatchsuggestions/
+}
