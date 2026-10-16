@@ -1,0 +1,51 @@
+---
+// Adds a link back to saverio-cirillo.com before the default site title,
+// so the portal and the personal site read as one site.
+import Default from '@astrojs/starlight/components/SiteTitle.astro';
+---
+
+<div class="title-group">
+	<a href="https://saverio-cirillo.com/" class="back-link" aria-label="Back to saverio-cirillo.com">
+		<span aria-hidden="true">←</span>
+		<span class="back-label">saverio-cirillo.com</span>
+	</a>
+	<span class="divider" aria-hidden="true"></span>
+	<Default />
+</div>
+
+<style>
+	.title-group {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		min-width: 0;
+	}
+
+	.back-link {
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		font-size: var(--sl-text-sm);
+		color: var(--sl-color-gray-3);
+		text-decoration: none;
+		white-space: nowrap;
+		transition: color 0.15s ease;
+	}
+
+	.back-link:hover {
+		color: var(--sl-color-white);
+	}
+
+	.divider {
+		width: 1px;
+		height: 1.25rem;
+		background-color: var(--sl-color-hairline-shade);
+	}
+
+	@media (max-width: 50rem) {
+		.back-label,
+		.divider {
+			display: none;
+		}
+	}
+</style>
