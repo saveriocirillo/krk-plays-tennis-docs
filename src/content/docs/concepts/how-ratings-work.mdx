@@ -15,9 +15,17 @@ A new player picks a level on the [NTRP self-rating scale](https://www.usta.com/
 starting rating = 1000 + (NTRP - 1.5) × 200
 ```
 
-| NTRP | 1.5 | 2.0 | 2.5 | 3.0 | 3.5 | 4.0 | 4.5 | 5.0 | 5.5 |
-|---|---|---|---|---|---|---|---|---|---|
-| Starting rating | 1000 | 1100 | 1200 | 1300 | 1400 | 1500 | 1600 | 1700 | 1800 |
+| NTRP level | Starting rating |
+|---|---|
+| 1.5 | 1000 |
+| 2.0 | 1100 |
+| 2.5 | 1200 |
+| 3.0 | 1300 |
+| 3.5 | 1400 |
+| 4.0 | 1500 |
+| 4.5 | 1600 |
+| 5.0 | 1700 |
+| 5.5 | 1800 |
 
 Every new player starts with a confidence of 20, the lowest value. Self-assessments are often too optimistic or too modest, so the API treats the starting rating as a rough guess and lets the first results correct it quickly.
 

@@ -130,12 +130,10 @@ You sent more than 60 requests in a minute with the same API key or token.
 }
 ```
 
-| Status | `error` | Cause | Fix |
-|---|---|---|---|
-| `401` | `invalid_client` | The client ID or client secret is wrong. | Check both values, and send them with HTTP Basic authentication. |
-| `400` | `invalid_scope` | The requested scope doesn't exist. | Request `matches:write`, the only scope. |
-| `400` | `unsupported_grant_type` | `grant_type` isn't `client_credentials`. | Send `grant_type=client_credentials`. |
-| `400` | `invalid_request` | A required form field is missing. | Send `grant_type` as a form field. |
+- **`invalid_client`** (status `401`): the client ID or client secret is wrong. Check both values, and send them with HTTP Basic authentication.
+- **`invalid_scope`** (status `400`): the requested scope doesn't exist. Request `matches:write`, the only scope.
+- **`unsupported_grant_type`** (status `400`): `grant_type` isn't `client_credentials`. Send `grant_type=client_credentials`.
+- **`invalid_request`** (status `400`): a required form field is missing. Send `grant_type` as a form field.
 
 ## Errors on the mock
 
