@@ -13,9 +13,9 @@ This guide submits the result of a match in the Kraków Autumn League: Ola K. be
 
 ## Before you begin
 
-- An access token with the `matches:write` scope in `KRK_ACCESS_TOKEN`. See [Get an access token](/portfolio/authentication/access-token/).
-- An API key in `KRK_API_KEY`, so you can read the competition and the match. See [Authenticate with an API key](/portfolio/authentication/api-key/).
-- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+- An access token with the `matches:write` scope in `KRK_ACCESS_TOKEN`. See [Get an access token](/krk-plays-tennis-api/authentication/access-token/).
+- An API key in `KRK_API_KEY`, so you can read the competition and the match. See [Authenticate with an API key](/krk-plays-tennis-api/authentication/api-key/).
+- `KRK_API_URL` set to the API base URL. For the [local mock](/krk-plays-tennis-api/quickstart/), that's `http://127.0.0.1:4010`.
 
 ## Steps
 
@@ -243,7 +243,7 @@ This guide submits the result of a match in the Kraków Autumn League: Ola K. be
    </TabItem>
    </Tabs>
 
-   The match has `"rating_status": "rated"`. Both players' ratings are updated: Ola's rating went from 1400 to 1432. To see why, follow [Explain a rating change](/portfolio/guides/explain-a-rating-change/).
+   The match has `"rating_status": "rated"`. Both players' ratings are updated: Ola's rating went from 1400 to 1432. To see why, follow [Explain a rating change](/krk-plays-tennis-api/guides/explain-a-rating-change/).
 
 ## Retirements and walkovers
 
@@ -285,15 +285,15 @@ For a walkover, send the player who advances. The response has `"rating_status":
 }
 ```
 
-To learn how a retirement affects the two ratings, see [How ratings work](/portfolio/concepts/how-ratings-work/#worked-example-a-retired-match).
+To learn how a retirement affects the two ratings, see [How ratings work](/krk-plays-tennis-api/concepts/how-ratings-work/#worked-example-a-retired-match).
 
 ## If the request fails
 
 | Status | `type` | Cause | Fix |
 |---|---|---|---|
-| `401` | [`unauthenticated`](/portfolio/errors/#unauthenticated) | The token is missing or expired. | [Get a new token](/portfolio/authentication/access-token/). |
-| `403` | [`not-competition-organizer`](/portfolio/errors/#not-competition-organizer) | Another organizer runs this competition. | Check `competition_id`. |
-| `409` | [`duplicate-match`](/portfolio/errors/#duplicate-match) | The API already has a match with these players in this competition at this time. | Get the existing match instead of submitting it again. |
-| `409` | [`idempotency-conflict`](/portfolio/errors/#idempotency-conflict) | You reused an `Idempotency-Key` with a different body. | Use a new key for each new result. |
-| `422` | [`invalid-score`](/portfolio/errors/#invalid-score) | The score doesn't fit the competition's match format. | Compare each set with `match_format`, from step 1. |
-| `422` | [`validation-failed`](/portfolio/errors/#validation-failed) | A field is missing or invalid. | Check the `errors` array in the response, which points to each invalid field. |
+| `401` | [`unauthenticated`](/krk-plays-tennis-api/errors/#unauthenticated) | The token is missing or expired. | [Get a new token](/krk-plays-tennis-api/authentication/access-token/). |
+| `403` | [`not-competition-organizer`](/krk-plays-tennis-api/errors/#not-competition-organizer) | Another organizer runs this competition. | Check `competition_id`. |
+| `409` | [`duplicate-match`](/krk-plays-tennis-api/errors/#duplicate-match) | The API already has a match with these players in this competition at this time. | Get the existing match instead of submitting it again. |
+| `409` | [`idempotency-conflict`](/krk-plays-tennis-api/errors/#idempotency-conflict) | You reused an `Idempotency-Key` with a different body. | Use a new key for each new result. |
+| `422` | [`invalid-score`](/krk-plays-tennis-api/errors/#invalid-score) | The score doesn't fit the competition's match format. | Compare each set with `match_format`, from step 1. |
+| `422` | [`validation-failed`](/krk-plays-tennis-api/errors/#validation-failed) | A field is missing or invalid. | Check the `errors` array in the response, which points to each invalid field. |

@@ -7,7 +7,7 @@ When a request fails, the API returns a `4xx` status and a body in the [RFC 9457
 
 ```json
 {
-  "type": "https://saverio-cirillo.com/portfolio/errors/#invalid-score",
+  "type": "https://saverio-cirillo.com/krk-plays-tennis-api/errors/#invalid-score",
   "title": "Invalid score",
   "status": 422,
   "detail": "The score isn't valid for the competition's match format.",
@@ -53,7 +53,7 @@ The request has no credentials, or they aren't valid:
 - For a read, the `X-API-Key` header is missing or the key isn't valid.
 - For `POST /matches`, the access token is missing or expired.
 
-**Fix:** see [Authenticate with an API key](/portfolio/authentication/api-key/), or [get a new access token](/portfolio/authentication/access-token/). Tokens expire after 1 hour.
+**Fix:** see [Authenticate with an API key](/krk-plays-tennis-api/authentication/api-key/), or [get a new access token](/krk-plays-tennis-api/authentication/access-token/). Tokens expire after 1 hour.
 
 ### `insufficient-scope`
 
@@ -101,7 +101,7 @@ You sent an `Idempotency-Key` that was already used in the last 24 hours, with a
 
 The score doesn't fit the competition's `match_format`. For example, a set ends 6-5, or there's a match tiebreak in a competition that plays a full third set. The `errors` array points to each invalid set.
 
-**Fix:** get the competition and compare each set with its `match_format`. See [Submit a match result](/portfolio/guides/submit-a-match-result/).
+**Fix:** get the competition and compare each set with its `match_format`. See [Submit a match result](/krk-plays-tennis-api/guides/submit-a-match-result/).
 
 ### `validation-failed`
 
@@ -139,6 +139,6 @@ You sent more than 60 requests in a minute with the same API key or token.
 
 ## Errors on the mock
 
-The [local mock](/portfolio/quickstart/) checks that each request matches the OpenAPI spec, but it doesn't run the business rules of the API. When a request is invalid, the mock returns the operation's first error example from the spec, whatever the actual problem is: `422` with `validation-failed` for `POST /matches`, and `400` with `invalid-request` for read operations. It never returns errors that depend on data, such as `invalid-score` or `duplicate-match`.
+The [local mock](/krk-plays-tennis-api/quickstart/) checks that each request matches the OpenAPI spec, but it doesn't run the business rules of the API. When a request is invalid, the mock returns the operation's first error example from the spec, whatever the actual problem is: `422` with `validation-failed` for `POST /matches`, and `400` with `invalid-request` for read operations. It never returns errors that depend on data, such as `invalid-score` or `duplicate-match`.
 
 To see the example response for a specific status, add a `Prefer` header to the request, such as `Prefer: code=404`.

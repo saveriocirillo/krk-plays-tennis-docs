@@ -10,11 +10,11 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 To submit match results with `POST /matches`, you need an OAuth 2.0 access token with the `matches:write` scope. You get the token from the authorization server with the client credentials grant, then send it in the `Authorization` header.
 
-Only competition organizers get client credentials, and a token can only submit results for competitions its organizer runs. To read data, use an [API key](/portfolio/authentication/api-key/) instead.
+Only competition organizers get client credentials, and a token can only submit results for competitions its organizer runs. To read data, use an [API key](/krk-plays-tennis-api/authentication/api-key/) instead.
 
 ## Before you begin
 
-- A client ID and a client secret for your organizer account. With the [local mock](/portfolio/quickstart/), any non-empty values work.
+- A client ID and a client secret for your organizer account. With the [local mock](/krk-plays-tennis-api/quickstart/), any non-empty values work.
 - `KRK_API_URL` set to the API base URL. For the mock, that's `http://127.0.0.1:4010`.
 
 ## Steps

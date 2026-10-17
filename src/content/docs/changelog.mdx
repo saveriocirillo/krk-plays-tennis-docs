@@ -5,6 +5,14 @@ description: Changes to the KRKplaysTennis API, newest first, with migration ste
 
 This page lists every change to the KRKplaysTennis API, newest first. The API follows [semantic versioning](https://semver.org/): from 1.0.0, a breaking change only happens in a new major version, with a new base URL such as `/v2`.
 
+## 1.0.1
+
+*October 17, 2026*
+
+### Changed
+
+- **The docs moved to `saverio-cirillo.com/krk-plays-tennis-api/`.** Problem `type` URLs changed with them, for example from `…/portfolio/errors/#invalid-score` to `…/krk-plays-tennis-api/errors/#invalid-score`. The error type names after `#` didn't change. Old URLs redirect to the new ones. If your code compares `type` with a stored URL, update the stored URL, or compare only the part after `#`.
+
 ## 1.0.0
 
 *October 16, 2026*
@@ -44,4 +52,4 @@ The first stable version. There are no changes to endpoints or schemas since 0.9
 
 - **Short sets.** Competitions can use sets to 4 games (`"games_per_set": 4`), with a tiebreak at 4-4. A set ends at 4 games with a 2-game lead, at 5-3, or at 5-4 with a tiebreak.
 - **No-ad scoring.** `no_ad` shows whether a game at deuce is decided by a single point. The API records games, not points, so it doesn't affect score validation or ratings.
-- **`POST /oauth/token` in the OpenAPI spec.** The token endpoint on the authorization server is now documented in the [API reference](/portfolio/reference/operations/getaccesstoken/), and the mock serves it, so you can test the whole client credentials flow locally.
+- **`POST /oauth/token` in the OpenAPI spec.** The token endpoint on the authorization server is now documented in the [API reference](/krk-plays-tennis-api/reference/operations/getaccesstoken/), and the mock serves it, so you can test the whole client credentials flow locally.

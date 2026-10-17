@@ -5,6 +5,6 @@
   "outputDirectory": "dist",
   "trailingSlash": true,
   "redirects": [
-    { "source": "/", "destination": "/portfolio/", "permanent": false }
+    { "source": "/", "destination": "/krk-plays-tennis-api/", "permanent": false }
   ]
 }

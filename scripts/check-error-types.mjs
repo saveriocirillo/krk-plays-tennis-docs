@@ -6,7 +6,7 @@ import GithubSlugger from 'github-slugger';
 
 const SPEC = 'openapi/krkplaystennis.v1.yaml';
 const ERRORS_PAGE = 'src/content/docs/errors.mdx';
-const TYPE_URL = /https:\/\/saverio-cirillo\.com\/portfolio\/errors\/#([a-z0-9-]+)/g;
+const TYPE_URL = /https:\/\/saverio-cirillo\.com\/krk-plays-tennis-api\/errors\/#([a-z0-9-]+)/g;
 
 const spec = await readFile(SPEC, 'utf-8');
 const specTypes = new Set([...spec.matchAll(TYPE_URL)].map((match) => match[1]));

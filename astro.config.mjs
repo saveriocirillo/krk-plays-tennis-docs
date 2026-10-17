@@ -5,13 +5,13 @@ import starlightOpenAPI, { openAPISidebarGroups } from 'starlight-openapi';
 import starlightLlmsTxt from 'starlight-llms-txt';
 
 export default defineConfig({
-	// The portal is served from saverio-cirillo.com/portfolio/ through a Vercel rewrite.
+	// The portal is served from saverio-cirillo.com/krk-plays-tennis-api/ through a Vercel rewrite.
 	site: 'https://saverio-cirillo.com',
-	base: '/portfolio',
+	base: '/krk-plays-tennis-api',
 	trailingSlash: 'always',
-	// Mirror the base path on disk so Vercel serves /portfolio/ as static files,
+	// Mirror the base path on disk so Vercel serves /krk-plays-tennis-api/ as static files,
 	// with directory indexes, and needs no rewrites.
-	outDir: './dist/portfolio',
+	outDir: './dist/krk-plays-tennis-api',
 	integrations: [
 		starlight({
 			plugins: [
@@ -34,21 +34,21 @@ export default defineConfig({
 						},
 					},
 				]),
-				// llms.txt, llms-full.txt, and llms-small.txt for AI agents, under /portfolio/.
+				// llms.txt, llms-full.txt, and llms-small.txt for AI agents, under /krk-plays-tennis-api/.
 				starlightLlmsTxt({
 					projectName: 'KRKplaysTennis API',
 					description:
 						'The KRKplaysTennis API rates amateur tennis players in Kraków from real match results. KRKplaysTennis is a fictional API, built as a technical writing portfolio: every example runs against a local mock server.',
 					details: [
-						'- The OpenAPI 3.1 spec is the most precise source for paths, parameters, and schemas: https://saverio-cirillo.com/portfolio/openapi.yaml',
-						'- Every page is also available as Markdown: add `.md` to its URL without the trailing slash, for example https://saverio-cirillo.com/portfolio/quickstart.md',
-						'- To try requests, start the mock with `npx @stoplight/prism-cli@5 mock https://saverio-cirillo.com/portfolio/openapi.yaml`, then call http://127.0.0.1:4010 with any `X-API-Key` value.',
+						'- The OpenAPI 3.1 spec is the most precise source for paths, parameters, and schemas: https://saverio-cirillo.com/krk-plays-tennis-api/openapi.yaml',
+						'- Every page is also available as Markdown: add `.md` to its URL without the trailing slash, for example https://saverio-cirillo.com/krk-plays-tennis-api/quickstart.md',
+						'- To try requests, start the mock with `npx @stoplight/prism-cli@5 mock https://saverio-cirillo.com/krk-plays-tennis-api/openapi.yaml`, then call http://127.0.0.1:4010 with any `X-API-Key` value.',
 						'- Read operations need an API key in `X-API-Key`. `POST /matches` needs an OAuth 2.0 access token with the `matches:write` scope.',
 					].join('\n'),
 					optionalLinks: [
 						{
 							label: 'OpenAPI spec',
-							url: 'https://saverio-cirillo.com/portfolio/openapi.yaml',
+							url: 'https://saverio-cirillo.com/krk-plays-tennis-api/openapi.yaml',
 							description: 'The source of truth for every operation and schema, in OpenAPI 3.1 YAML.',
 						},
 					],

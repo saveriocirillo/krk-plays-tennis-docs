@@ -20,4 +20,4 @@ exclude = [
 ]
 
 # Starlight's 404 page has a canonical link to /404/, which isn't a page.
-exclude_path = ['dist/portfolio/404\.html']
+exclude_path = ['dist/krk-plays-tennis-api/404\.html']

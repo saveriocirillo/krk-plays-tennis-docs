@@ -34,7 +34,7 @@ This guide <does the task for a specific person or match from the dataset>.
 ## Before you begin
 
 - <Credential, with a link to the authentication page that explains it>.
-- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+- `KRK_API_URL` set to the API base URL. For the [local mock](/krk-plays-tennis-api/quickstart/), that's `http://127.0.0.1:4010`.
 
 ## Steps
 
@@ -77,7 +77,7 @@ This guide <does the task for a specific person or match from the dataset>.
 
 | Status | `type` | Cause | Fix |
 |---|---|---|---|
-| <status> | [`<type>`](/portfolio/errors/#<type>) | <cause> | <fix> |
+| <status> | [`<type>`](/krk-plays-tennis-api/errors/#<type>) | <cause> | <fix> |
 ````
 
 ## Rules for the steps
