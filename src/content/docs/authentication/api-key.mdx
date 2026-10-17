@@ -10,11 +10,11 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 Every read operation in the KRKplaysTennis API needs an API key. You send the key in the `X-API-Key` header of each request.
 
-An API key can only read data. To submit match results, you need an access token instead. See [Get an access token](/portfolio/authentication/access-token/).
+An API key can only read data. To submit match results, you need an access token instead. See [Get an access token](/krk-plays-tennis-api/authentication/access-token/).
 
 ## Before you begin
 
-- An API key. With the [local mock](/portfolio/quickstart/), any non-empty value works.
+- An API key. With the [local mock](/krk-plays-tennis-api/quickstart/), any non-empty value works.
 - `KRK_API_URL` set to the API base URL. For the mock, that's `http://127.0.0.1:4010`.
 
 ## Steps
@@ -81,7 +81,7 @@ When a request has no `X-API-Key` header, or the key isn't valid, the API return
 
 ```json
 {
-  "type": "https://saverio-cirillo.com/portfolio/errors/#unauthenticated",
+  "type": "https://saverio-cirillo.com/krk-plays-tennis-api/errors/#unauthenticated",
   "title": "Authentication required",
   "status": 401,
   "detail": "Send a valid API key in the X-API-Key header.",

@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: KRKplaysTennis API
-  version: 1.0.0
+  version: 1.0.1
   summary: Ratings for amateur tennis players in Kraków, based on real match results.
   description: |
     The KRKplaysTennis API collects singles match results from amateur leagues and tournaments in Kraków and rates each player from those results.
@@ -17,7 +17,7 @@ info:
 
     ## Errors
 
-    Errors use [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details with the `application/problem+json` media type. Each `type` URL links to the matching section of the [errors reference](https://saverio-cirillo.com/portfolio/errors/).
+    Errors use [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details with the `application/problem+json` media type. Each `type` URL links to the matching section of the [errors reference](https://saverio-cirillo.com/krk-plays-tennis-api/errors/).
 
     ## Times
 
@@ -245,7 +245,7 @@ paths:
       description: |
         Returns a player's current rating, confidence, and the K-factor that applies to their next rated match.
 
-        To see how the rating got to its current value, [list the player's rating history](https://saverio-cirillo.com/portfolio/reference/operations/listplayerratinghistory/).
+        To see how the rating got to its current value, [list the player's rating history](https://saverio-cirillo.com/krk-plays-tennis-api/reference/operations/listplayerratinghistory/).
       tags: [Ratings]
       parameters:
         - $ref: '#/components/parameters/PlayerIdPath'
@@ -635,7 +635,7 @@ paths:
                 insufficientScope:
                   summary: Token without the matches:write scope
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#insufficient-scope
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#insufficient-scope
                     title: Insufficient scope
                     status: 403
                     detail: This operation requires the matches:write scope.
@@ -643,7 +643,7 @@ paths:
                 notOrganizer:
                   summary: Competition run by another organizer
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#not-competition-organizer
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#not-competition-organizer
                     title: Not the competition organizer
                     status: 403
                     detail: Only the organizer of competition cmp_1qv7mz3kpd can submit its results.
@@ -658,7 +658,7 @@ paths:
                 idempotencyConflict:
                   summary: Idempotency key reused with a different body
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#idempotency-conflict
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#idempotency-conflict
                     title: Idempotency key conflict
                     status: 409
                     detail: The Idempotency-Key 5f0c6a2e-8d47-4b8e-9a51-2b3c7e1d9f04 was already used with a different request body.
@@ -666,7 +666,7 @@ paths:
                 duplicateMatch:
                   summary: Same players, competition, and start time
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#duplicate-match
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#duplicate-match
                     title: Duplicate match
                     status: 409
                     detail: Match mat_4nc8xq2vbt already records these players in this competition at 2026-10-10T18:00:00+02:00.
@@ -681,7 +681,7 @@ paths:
                 validationFailed:
                   summary: Same player on both sides
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#validation-failed
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#validation-failed
                     title: Validation failed
                     status: 422
                     detail: The request has 1 invalid field.
@@ -692,7 +692,7 @@ paths:
                 invalidScore:
                   summary: Score that can't end a set
                   value:
-                    type: https://saverio-cirillo.com/portfolio/errors/#invalid-score
+                    type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#invalid-score
                     title: Invalid score
                     status: 422
                     detail: The score isn't valid for the competition's match format.
@@ -993,7 +993,7 @@ components:
             invalidRequest:
               summary: Limit out of range
               value:
-                type: https://saverio-cirillo.com/portfolio/errors/#invalid-request
+                type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#invalid-request
                 title: Invalid request
                 status: 400
                 detail: The request has 1 invalid parameter.
@@ -1011,7 +1011,7 @@ components:
             unauthenticated:
               summary: Missing API key
               value:
-                type: https://saverio-cirillo.com/portfolio/errors/#unauthenticated
+                type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#unauthenticated
                 title: Authentication required
                 status: 401
                 detail: Send a valid API key in the X-API-Key header.
@@ -1026,7 +1026,7 @@ components:
             notFound:
               summary: Unknown player ID
               value:
-                type: https://saverio-cirillo.com/portfolio/errors/#not-found
+                type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#not-found
                 title: Not found
                 status: 404
                 detail: No player exists with the ID plr_0000000000.
@@ -1048,7 +1048,7 @@ components:
             rateLimited:
               summary: Rate limit reached
               value:
-                type: https://saverio-cirillo.com/portfolio/errors/#rate-limited
+                type: https://saverio-cirillo.com/krk-plays-tennis-api/errors/#rate-limited
                 title: Rate limit reached
                 status: 429
                 detail: This API key is limited to 60 requests per minute. Retry after 30 seconds.

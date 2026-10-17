@@ -60,5 +60,5 @@ For a beta release, add `· Beta` after the date, not in the heading.
 
 - Lead with the impact on the reader, not with how it was built.
 - Every breaking change has migration steps. "Update your code" isn't a migration step.
-- Link each new operation to its reference page: `/portfolio/reference/operations/<operationid>/`.
+- Link each new operation to its reference page: `/krk-plays-tennis-api/reference/operations/<operationid>/`.
 - Use the style guide. Run `vale src/content/docs/changelog.mdx` before you open the PR.

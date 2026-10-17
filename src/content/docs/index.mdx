@@ -17,38 +17,38 @@ KRKplaysTennis is a fictional API, built as a technical writing portfolio. The p
 - Each rated match moves the rating up or down, based on the result and on the opponent's rating.
 - A confidence value from 0 to 100 shows how settled the rating is. A new rating moves quickly, and a settled rating moves slowly.
 
-The rating comes from results, not from the self-assessment. The self-assessed level is only the starting point. For the full model, with worked examples, see [How ratings work](/portfolio/concepts/how-ratings-work/).
+The rating comes from results, not from the self-assessment. The self-assessed level is only the starting point. For the full model, with worked examples, see [How ratings work](/krk-plays-tennis-api/concepts/how-ratings-work/).
 
 ## What you can do
 
 | Task | Guide | Operations |
 |---|---|---|
-| Read player profiles and ratings | [Quickstart](/portfolio/quickstart/) | [List players](/portfolio/reference/operations/listplayers/), [Get a player's rating](/portfolio/reference/operations/getplayerrating/) |
-| See why a rating changed | [Explain a rating change](/portfolio/guides/explain-a-rating-change/) | [List a player's rating history](/portfolio/reference/operations/listplayerratinghistory/) |
-| Find opponents for a player | [Find opponents for a player](/portfolio/guides/find-opponents/) | [List match suggestions](/portfolio/reference/operations/listmatchsuggestions/) |
-| Browse competitions, venues, and results | | [List competitions](/portfolio/reference/operations/listcompetitions/), [List venues](/portfolio/reference/operations/listvenues/), [List matches](/portfolio/reference/operations/listmatches/) |
-| Submit a match result, as a competition organizer | [Submit a match result](/portfolio/guides/submit-a-match-result/) | [Submit a match result](/portfolio/reference/operations/creatematch/) |
+| Read player profiles and ratings | [Quickstart](/krk-plays-tennis-api/quickstart/) | [List players](/krk-plays-tennis-api/reference/operations/listplayers/), [Get a player's rating](/krk-plays-tennis-api/reference/operations/getplayerrating/) |
+| See why a rating changed | [Explain a rating change](/krk-plays-tennis-api/guides/explain-a-rating-change/) | [List a player's rating history](/krk-plays-tennis-api/reference/operations/listplayerratinghistory/) |
+| Find opponents for a player | [Find opponents for a player](/krk-plays-tennis-api/guides/find-opponents/) | [List match suggestions](/krk-plays-tennis-api/reference/operations/listmatchsuggestions/) |
+| Browse competitions, venues, and results | | [List competitions](/krk-plays-tennis-api/reference/operations/listcompetitions/), [List venues](/krk-plays-tennis-api/reference/operations/listvenues/), [List matches](/krk-plays-tennis-api/reference/operations/listmatches/) |
+| Submit a match result, as a competition organizer | [Submit a match result](/krk-plays-tennis-api/guides/submit-a-match-result/) | [Submit a match result](/krk-plays-tennis-api/reference/operations/creatematch/) |
 
 ## Which credential you need
 
 | To | You need | Guide |
 |---|---|---|
-| Read any data | An API key | [Authenticate with an API key](/portfolio/authentication/api-key/) |
-| Submit match results | An OAuth 2.0 access token with the `matches:write` scope | [Get an access token](/portfolio/authentication/access-token/) |
+| Read any data | An API key | [Authenticate with an API key](/krk-plays-tennis-api/authentication/api-key/) |
+| Submit match results | An OAuth 2.0 access token with the `matches:write` scope | [Get an access token](/krk-plays-tennis-api/authentication/access-token/) |
 
 ## Conventions
 
 - **Base URL:** `https://api.krkplaystennis.example/v1`
 - **Format:** requests and responses are JSON.
 - **Pagination:** list operations return `data` and a `next_cursor`. Pass `next_cursor` as `cursor` to get the next page.
-- **Errors:** every error is an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details object, with a `type` URL for each kind of error. See [Errors](/portfolio/errors/).
+- **Errors:** every error is an [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) problem details object, with a `type` URL for each kind of error. See [Errors](/krk-plays-tennis-api/errors/).
 - **Times:** timestamps follow RFC 3339. Availability windows use local time in Kraków (`Europe/Warsaw`).
 
 ## Next steps
 
 <CardGrid>
-	<LinkCard title="Quickstart" description="Start the mock and make your first request in under 5 minutes." href="/portfolio/quickstart/" />
-	<LinkCard title="Authenticate with an API key" description="Send your API key with every read request." href="/portfolio/authentication/api-key/" />
-	<LinkCard title="Submit a match result" description="Send a result as a competition organizer and check that it's rated." href="/portfolio/guides/submit-a-match-result/" />
-	<LinkCard title="API reference" description="Every operation, parameter, and schema, generated from the OpenAPI spec." href="/portfolio/reference/" />
+	<LinkCard title="Quickstart" description="Start the mock and make your first request in under 5 minutes." href="/krk-plays-tennis-api/quickstart/" />
+	<LinkCard title="Authenticate with an API key" description="Send your API key with every read request." href="/krk-plays-tennis-api/authentication/api-key/" />
+	<LinkCard title="Submit a match result" description="Send a result as a competition organizer and check that it's rated." href="/krk-plays-tennis-api/guides/submit-a-match-result/" />
+	<LinkCard title="API reference" description="Every operation, parameter, and schema, generated from the OpenAPI spec." href="/krk-plays-tennis-api/reference/" />
 </CardGrid>

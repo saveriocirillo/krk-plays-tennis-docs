@@ -1,4 +1,4 @@
-// Publishes the OpenAPI spec at /portfolio/openapi.yaml, so readers and agents can
+// Publishes the OpenAPI spec at /krk-plays-tennis-api/openapi.yaml, so readers and agents can
 // download it or start a mock from its URL. The file in openapi/ stays the only copy.
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';

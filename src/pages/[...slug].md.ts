@@ -1,5 +1,5 @@
-// Serves a Markdown version of every docs page: /portfolio/quickstart/ is also at
-// /portfolio/quickstart.md. Agents read Markdown more reliably than HTML.
+// Serves a Markdown version of every docs page: /krk-plays-tennis-api/quickstart/ is also at
+// /krk-plays-tennis-api/quickstart.md. Agents read Markdown more reliably than HTML.
 //
 // Each page is rendered to HTML first, so MDX components such as <Tabs> come out as
 // they look on the page, then converted to Markdown. This follows the same approach
@@ -16,7 +16,7 @@ import remarkGfm from 'remark-gfm';
 import remarkStringify from 'remark-stringify';
 import { unified } from 'unified';
 
-const SITE_URL = 'https://saverio-cirillo.com/portfolio';
+const SITE_URL = 'https://saverio-cirillo.com/krk-plays-tennis-api';
 
 const container = await experimental_AstroContainer.create({
 	renderers: [{ name: 'astro:jsx', ssr: mdxServer }],
@@ -150,7 +150,7 @@ export const GET: APIRoute<{ entry: CollectionEntry<'docs'> }> = async (context)
 	// Make site links absolute, so they work wherever an agent reads the file.
 	const body = String(await toMarkdown.process(html))
 		.trim()
-		.replaceAll('](/portfolio/', `](${SITE_URL}/`);
+		.replaceAll('](/krk-plays-tennis-api/', `](${SITE_URL}/`);
 
 	const pageUrl = entry.id === 'index' ? `${SITE_URL}/` : `${SITE_URL}/${entry.id}/`;
 	const markdown = [

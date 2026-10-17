@@ -6,7 +6,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const DOCS_DIR = 'src/content/docs';
-const BUILD_DIR = 'dist/portfolio';
+const BUILD_DIR = 'dist/krk-plays-tennis-api';
 const FENCE = /^([ \t]*)```[a-z]*\n([\s\S]*?)^\1```/gm;
 const MDX_LEFTOVERS = /^import |<\/?(Tabs|TabItem|CardGrid|LinkCard)\b/m;
 

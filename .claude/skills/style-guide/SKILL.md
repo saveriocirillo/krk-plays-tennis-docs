@@ -50,4 +50,4 @@ Use these consistently, and don't swap in synonyms:
    - **A real problem:** fix the text. Never edit a rule to make a finding go away.
    - **A correct project term** flagged by spelling, such as a new venue name: add it to `.vale/styles/config/vocabularies/KRK/accept.txt`.
    - **A false positive** from a Google rule on a correct sentence: rephrase the sentence. Explain any rule change in the PR description.
-3. Read the page as its Markdown version (`npm run build`, then open `dist/portfolio/<page>.md`). If a sentence only makes sense next to a picture or a tab, rewrite it.
+3. Read the page as its Markdown version (`npm run build`, then open `dist/krk-plays-tennis-api/<page>.md`). If a sentence only makes sense next to a picture or a tab, rewrite it.

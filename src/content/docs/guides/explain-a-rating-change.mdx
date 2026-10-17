@@ -9,12 +9,12 @@ import { Tabs, TabItem } from '@astrojs/starlight/components';
 
 When a player wants to know why their rating went up by 32, the rating history has the answer. Each entry records what changed, why, and, for a match, every number used in the calculation. You can show players the explanation, or reproduce the change yourself to check it.
 
-This guide explains the change to the rating of Ola K. (`plr_2b7xq9mhk4`) after a win against Kasia W. To learn the model behind the numbers, see [How ratings work](/portfolio/concepts/how-ratings-work/).
+This guide explains the change to the rating of Ola K. (`plr_2b7xq9mhk4`) after a win against Kasia W. To learn the model behind the numbers, see [How ratings work](/krk-plays-tennis-api/concepts/how-ratings-work/).
 
 ## Before you begin
 
-- An API key in `KRK_API_KEY`. See [Authenticate with an API key](/portfolio/authentication/api-key/).
-- `KRK_API_URL` set to the API base URL. For the [local mock](/portfolio/quickstart/), that's `http://127.0.0.1:4010`.
+- An API key in `KRK_API_KEY`. See [Authenticate with an API key](/krk-plays-tennis-api/authentication/api-key/).
+- `KRK_API_URL` set to the API base URL. For the [local mock](/krk-plays-tennis-api/quickstart/), that's `http://127.0.0.1:4010`.
 
 ## Steps
 
@@ -172,7 +172,7 @@ This guide explains the change to the rating of Ola K. (`plr_2b7xq9mhk4`) after 
    Won against Kasia W. (1520). Expected score 0.334, actual score 1. K-factor 48 because confidence was 20.
    ```
 
-   Display it next to the change, so the player sees both the number and the reason. For the full model, link players to [How ratings work](/portfolio/concepts/how-ratings-work/).
+   Display it next to the change, so the player sees both the number and the reason. For the full model, link players to [How ratings work](/krk-plays-tennis-api/concepts/how-ratings-work/).
 
 ## Other reasons for a change
 

@@ -3,15 +3,15 @@ Docs portal for the KRKplaysTennis API, a fictional amateur tennis API for Krak√
 
 This fictional API aggregates amateur tennis matches in Krak√≥w and computes player ratings from real results, not self-assessment.
 
-**Live portal:** [saverio-cirillo.com/portfolio](https://saverio-cirillo.com/portfolio/)
+**Live portal:** [saverio-cirillo.com/krk-plays-tennis-api](https://saverio-cirillo.com/krk-plays-tennis-api/)
 
 ## What this portal shows
 
 I built this portal as a technical writing portfolio. It shows three things:
 
-- **Writing.** Task-based guides with one task per page, a [concept page](https://saverio-cirillo.com/portfolio/concepts/how-ratings-work/) that explains a rating model in plain language, and an [errors reference](https://saverio-cirillo.com/portfolio/errors/) that matches every error the API returns.
+- **Writing.** Task-based guides with one task per page, a [concept page](https://saverio-cirillo.com/krk-plays-tennis-api/concepts/how-ratings-work/) that explains a rating model in plain language, and an [errors reference](https://saverio-cirillo.com/krk-plays-tennis-api/errors/) that matches every error the API returns.
 - **Docs as code.** The OpenAPI spec came first. The API reference is generated from it, every page goes through a reviewed pull request, and every code sample runs against a mock server in CI.
-- **Docs for agents.** [`llms.txt`](https://saverio-cirillo.com/portfolio/llms.txt), a Markdown version of every page, and a read-only MCP server. See [Use this API with AI agents](https://saverio-cirillo.com/portfolio/agents/use-with-ai-agents/).
+- **Docs for agents.** [`llms.txt`](https://saverio-cirillo.com/krk-plays-tennis-api/llms.txt), a Markdown version of every page, and a read-only MCP server. See [Use this API with AI agents](https://saverio-cirillo.com/krk-plays-tennis-api/agents/use-with-ai-agents/).
 
 ## How these docs are made
 
@@ -68,7 +68,7 @@ npm install
 npm run dev
 ```
 
-The site runs at `http://localhost:4321/portfolio/`.
+The site runs at `http://localhost:4321/krk-plays-tennis-api/`.
 
 ## Try the API against the mock
 

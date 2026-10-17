@@ -92,9 +92,9 @@ jobs:
           args: >-
             --config lychee.toml
             --root-dir ${{ github.workspace }}/dist
-            --remap 'https://saverio-cirillo.com/portfolio file://${{ github.workspace }}/dist/portfolio'
+            --remap 'https://saverio-cirillo.com/krk-plays-tennis-api file://${{ github.workspace }}/dist/krk-plays-tennis-api'
             --no-progress
-            'dist/portfolio/**/*.html'
+            'dist/krk-plays-tennis-api/**/*.html'
 
   samples:
     name: Samples (Prism mock)
