@@ -23,3 +23,29 @@
 .card:nth-child(4n + 3) { border-top: 2px solid var(--krk-blue-3); }
 .sl-link-card:nth-child(4n + 4),
 .card:nth-child(4n + 4) { border-top: 2px solid var(--krk-blue-4); }
+
+/*
+ * Accessibility: contrast fixes for WCAG 2.1 AA (4.5:1), found with axe.
+ */
+
+/* Unselected tab labels: gray-3 is 4.48:1 on the dark theme background. */
+starlight-tabs [role='tab']:not([aria-selected='true']) {
+  color: var(--sl-color-gray-2);
+}
+
+/* Required-field markers in the generated API reference. The plugin's scoped
+   styles are more specific, so these need !important. */
+[class*='sl-openapi'] sup,
+.sl-openapi-key-required {
+  color: #be123c !important;
+}
+[data-theme='dark'] [class*='sl-openapi'] sup,
+[data-theme='dark'] .sl-openapi-key-required {
+  color: #fda4af !important;
+}
+
+/* Example code in the generated API reference: the plugin's gray-5 background
+   leaves syntax colors below 4.5:1, so use the lighter gray-6. */
+.sl-openapi-example div.expressive-code .frame pre {
+  background-color: var(--sl-color-gray-6) !important;
+}

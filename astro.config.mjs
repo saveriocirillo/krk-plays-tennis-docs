@@ -67,6 +67,14 @@ export default defineConfig({
 			description:
 				'Developer documentation for the KRKplaysTennis API, a fictional API that rates amateur tennis players in Kraków from real match results.',
 			customCss: ['./src/styles/custom.css'],
+			// Preview image for links shared on LinkedIn, Slack, and similar. Built by scripts/make-og-image.mjs.
+			head: [
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://saverio-cirillo.com/krk-plays-tennis-api/og.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'KRKplaysTennis API docs: docs portal for a fictional tennis API, by Saverio Cirillo' } },
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://saverio-cirillo.com/krk-plays-tennis-api/og.png' } },
+			],
 			components: {
 				Head: './src/components/Head.astro',
 				SiteTitle: './src/components/SiteTitle.astro',

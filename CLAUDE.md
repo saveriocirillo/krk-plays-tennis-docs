@@ -69,6 +69,8 @@ When Vale flags a correct project term, add it to the vocabulary instead of rewo
 
 - Astro Starlight, served under `base: '/krk-plays-tennis-api'` with `trailingSlash: 'always'`. Internal links must include the base path or be relative.
 - Production URL: `https://saverio-cirillo.com/krk-plays-tennis-api/`, through a Vercel rewrite from the personal site. Fallback: `docs.saverio-cirillo.com`.
+- The social preview image is `public/og.png`, built by `node scripts/make-og-image.mjs`. Rebuild it when the title or URL changes.
+- `src/styles/custom.css` has contrast fixes for WCAG 2.1 AA, found with axe. Check contrast in both themes when you change colors.
 - The theme matches saverio-cirillo.com: Starlight default fonts and accent, `#f4f4f5` light-mode nav, blue card accents `#1d4ed8` to `#60a5fa`. Change both sites together or neither.
 
 ## Planned content structure
